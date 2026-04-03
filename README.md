@@ -14,6 +14,18 @@ Moltark is at an early stage of development.
 
 This repository is in its initial setup phase while the implementation is being built. The published packages are early placeholder releases and do not yet provide the intended functionality.
 
+## Documentation
+
+Architecture and testing notes live in [`docs/`](./docs/README.md).
+
+Recommended reading order:
+
+- [`docs/README.md`](./docs/README.md)
+- [`docs/concepts/01-core-concepts.md`](./docs/concepts/01-core-concepts.md)
+- [`docs/concepts/02-modules-and-providers.md`](./docs/concepts/02-modules-and-providers.md)
+- [`docs/concepts/03-execution-model.md`](./docs/concepts/03-execution-model.md)
+- [`docs/testing.md`](./docs/testing.md)
+
 ## The problem
 
 Most project generators are good at one thing: creating a starting point.

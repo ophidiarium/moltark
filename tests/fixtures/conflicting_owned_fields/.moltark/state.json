@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "template_version": "python/v2",
+  "managed_files": [
+    {
+      "path": "pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "7bc464d66acaefc90f2f140849ba46be18c5c08e14f0596ff54229f555c25430",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "project_1",
+        "kind": "python_project",
+        "name": "demo",
+        "path": ".",
+        "effective_path": "."
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "target_project_id": "project_1"
+      }
+    ]
+  }
+}

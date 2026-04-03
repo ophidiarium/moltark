@@ -140,6 +140,14 @@ This is not just a scaffold tool. It should be able to carry evolving standards 
 
 Testing should be fixture-driven and behavior-oriented.
 
+See:
+
+- [`docs/testing.md`](./docs/testing.md)
+- [`docs/concepts/01-core-concepts.md`](./docs/concepts/01-core-concepts.md)
+- [`docs/concepts/02-modules-and-providers.md`](./docs/concepts/02-modules-and-providers.md)
+- [`docs/concepts/03-execution-model.md`](./docs/concepts/03-execution-model.md)
+- [`docs/future-paths.md`](./docs/future-paths.md)
+
 Prefer:
 
 - input fixture -> operation -> observable outcome
@@ -159,6 +167,24 @@ Core scenarios should cover:
 - user-visible diagnostics
 
 A good test should read like a real repository evolution scenario and fail with obvious artifacts.
+
+Current test framework details:
+
+- integration snapshots use `github.com/gkampitakis/go-snaps`
+- Gherkin scenarios use `github.com/cucumber/godog`
+- fixtures live under `tests/fixtures/`
+- integration tests live under `tests/integration/`
+- snapshot files live under `tests/integration/__snapshots__/`
+- feature tests live under `tests/features/`
+
+Current commands:
+
+- full suite: `go test -count=1 ./...`
+- integration only: `go test -count=1 ./tests/integration/...`
+- feature only: `go test -count=1 ./tests/features/...`
+- refresh integration snapshots: `UPDATE_SNAPS=true go test -count=1 ./tests/integration/...`
+
+Use `-count=1` when changing snapshots or CLI behavior to avoid stale test-cache confusion.
 
 ## Agent checklist
 
