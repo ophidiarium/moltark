@@ -1,0 +1,19 @@
+{
+  "name": "ophidiarium/moltark",
+  "description": "Modern software project templater with first-class support for updates and template evolution.",
+  "type": "library",
+  "license": "AGPL-3.0-only",
+  "homepage": "https://github.com/ophidiarium/moltark",
+  "keywords": ["template", "scaffolding", "project-generator", "starlark", "updates"],
+  "authors": [
+    { "name": "Ophidiarium" }
+  ],
+  "require": {
+    "php": ">=8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Ophidiarium\\Moltark\\": "src/"
+    }
+  }
+}
