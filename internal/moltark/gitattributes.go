@@ -21,10 +21,8 @@ func mutateGitattributes(raw string) string {
 		return block + "\n"
 	}
 
-	begin := strings.Index(raw, gitattributesBegin)
-	end := strings.Index(raw, gitattributesEnd)
-	if begin >= 0 && end >= begin {
-		end += len(gitattributesEnd)
+	begin, end, ok := managedBlockBounds(raw)
+	if ok {
 		updated := raw[:begin] + block + raw[end:]
 		return ensureTrailingNewline(updated)
 	}
@@ -34,12 +32,26 @@ func mutateGitattributes(raw string) string {
 }
 
 func currentManagedGitattributesBlock(raw string) (string, bool) {
-	begin := strings.Index(raw, gitattributesBegin)
-	end := strings.Index(raw, gitattributesEnd)
-	if begin < 0 || end < begin {
+	begin, end, ok := managedBlockBounds(raw)
+	if !ok {
 		return "", false
 	}
 
-	end += len(gitattributesEnd)
 	return raw[begin:end], true
+}
+
+func managedBlockBounds(raw string) (int, int, bool) {
+	begin := strings.Index(raw, gitattributesBegin)
+	if begin < 0 {
+		return -1, -1, false
+	}
+
+	searchStart := begin + len(gitattributesBegin)
+	offset := strings.Index(raw[searchStart:], gitattributesEnd)
+	if offset < 0 {
+		return -1, -1, false
+	}
+
+	end := searchStart + offset + len(gitattributesEnd)
+	return begin, end, true
 }

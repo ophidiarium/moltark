@@ -1,8 +1,9 @@
 package moltark
 
 import (
-	"encoding/json"
 	"fmt"
+	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -100,9 +101,16 @@ func mutateTOMLFile(raw string, desiredValues map[string]any, ownedPaths []strin
 
 func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) string {
 	sections := map[string][]string{}
+	rootKeys := []string{}
 	tableOrder := []string{}
 	for _, ownedPath := range ownedPaths {
 		table, key := splitOwnedPath(ownedPath)
+		if table == "" {
+			if !containsString(rootKeys, key) {
+				rootKeys = append(rootKeys, key)
+			}
+			continue
+		}
 		if _, ok := sections[table]; !ok {
 			tableOrder = append(tableOrder, table)
 		}
@@ -111,6 +119,10 @@ func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) string {
 		}
 	}
 	lines := []string{}
+	for _, key := range rootKeys {
+		value, _ := lookupPath(desiredValues, key)
+		lines = append(lines, fmt.Sprintf("%s = %s", key, renderTomlValue(value)))
+	}
 	for _, table := range tableOrder {
 		keys := sections[table]
 		if len(lines) > 0 {
@@ -135,6 +147,9 @@ type tomlUpdate struct {
 
 func splitOwnedPath(path string) (string, string) {
 	index := strings.LastIndex(path, ".")
+	if index < 0 {
+		return "", path
+	}
 	return path[:index], path[index+1:]
 }
 
@@ -149,25 +164,98 @@ func containsString(values []string, target string) bool {
 
 func renderTomlValue(value any) string {
 	switch typed := value.(type) {
+	case nil:
+		return `""`
 	case string:
 		return strconv.Quote(typed)
+	case bool:
+		return strconv.FormatBool(typed)
 	case int:
 		return strconv.Itoa(typed)
+	case int8, int16, int32, int64:
+		return strconv.FormatInt(reflect.ValueOf(typed).Int(), 10)
+	case uint, uint8, uint16, uint32, uint64, uintptr:
+		return strconv.FormatUint(reflect.ValueOf(typed).Uint(), 10)
+	case float32:
+		return strconv.FormatFloat(float64(typed), 'f', -1, 32)
+	case float64:
+		return strconv.FormatFloat(typed, 'f', -1, 64)
 	case []string:
 		items := make([]string, 0, len(typed))
 		for _, item := range typed {
 			items = append(items, strconv.Quote(item))
 		}
 		return "[" + strings.Join(items, ", ") + "]"
-	default:
-		encoded, _ := json.Marshal(typed)
-		return string(encoded)
+	case []any:
+		items := make([]string, 0, len(typed))
+		for _, item := range typed {
+			items = append(items, renderTomlValue(item))
+		}
+		return "[" + strings.Join(items, ", ") + "]"
+	case map[string]any:
+		return renderTomlInlineTable(typed)
+	case map[string]string:
+		items := make(map[string]any, len(typed))
+		for key, item := range typed {
+			items[key] = item
+		}
+		return renderTomlInlineTable(items)
 	}
+
+	valueRef := reflect.ValueOf(value)
+	switch valueRef.Kind() {
+	case reflect.Slice, reflect.Array:
+		items := make([]string, 0, valueRef.Len())
+		for i := 0; i < valueRef.Len(); i++ {
+			items = append(items, renderTomlValue(valueRef.Index(i).Interface()))
+		}
+		return "[" + strings.Join(items, ", ") + "]"
+	case reflect.Map:
+		if valueRef.Type().Key().Kind() == reflect.String {
+			items := make(map[string]any, valueRef.Len())
+			iter := valueRef.MapRange()
+			for iter.Next() {
+				items[iter.Key().String()] = iter.Value().Interface()
+			}
+			return renderTomlInlineTable(items)
+		}
+	}
+
+	return strconv.Quote(fmt.Sprint(value))
+}
+
+func renderTomlInlineTable(values map[string]any) string {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	items := make([]string, 0, len(keys))
+	for _, key := range keys {
+		items = append(items, fmt.Sprintf("%s = %s", key, renderTomlValue(values[key])))
+	}
+	return "{ " + strings.Join(items, ", ") + " }"
 }
 
 func upsertTomlKey(raw string, table string, key string, value string) (string, error) {
 	lines, newline := splitText(raw)
 	keyLine := fmt.Sprintf("%s = %s", key, value)
+	if table == "" {
+		start, end := findRootTable(lines)
+		keyStart, keyEnd := findKey(lines, start, end, key)
+		if keyStart == -1 {
+			insertAt := end
+			for insertAt > start+1 && strings.TrimSpace(lines[insertAt-1]) == "" {
+				insertAt--
+			}
+			lines = insertLines(lines, insertAt, []string{keyLine})
+			return joinLines(lines, newline), nil
+		}
+
+		lines = append(lines[:keyStart], append([]string{keyLine}, lines[keyEnd:]...)...)
+		return joinLines(lines, newline), nil
+	}
 	start, end := findTable(lines, table)
 	if start == -1 {
 		insertAt := len(lines)
@@ -195,6 +283,15 @@ func upsertTomlKey(raw string, table string, key string, value string) (string, 
 
 	lines = append(lines[:keyStart], append([]string{keyLine}, lines[keyEnd:]...)...)
 	return joinLines(lines, newline), nil
+}
+
+func findRootTable(lines []string) (int, int) {
+	for i, line := range lines {
+		if _, ok := parseTableHeader(line); ok {
+			return -1, i
+		}
+	}
+	return -1, len(lines)
 }
 
 func splitText(raw string) ([]string, string) {
@@ -240,20 +337,30 @@ func findTable(lines []string, table string) (int, int) {
 
 func parseTableHeader(line string) (string, bool) {
 	trimmed := strings.TrimSpace(line)
-	if !strings.HasPrefix(trimmed, "[") || !strings.HasSuffix(trimmed, "]") || strings.HasPrefix(trimmed, "[[") {
+	if !strings.HasPrefix(trimmed, "[") || strings.HasPrefix(trimmed, "[[") {
 		return "", false
 	}
-	return strings.TrimSuffix(strings.TrimPrefix(trimmed, "["), "]"), true
+	end := strings.Index(trimmed, "]")
+	if end <= 0 {
+		return "", false
+	}
+
+	rest := strings.TrimSpace(trimmed[end+1:])
+	if rest != "" && !strings.HasPrefix(rest, "#") {
+		return "", false
+	}
+
+	return strings.TrimSpace(trimmed[1:end]), true
 }
 
 func findKey(lines []string, start int, end int, key string) (int, int) {
-	prefix := key + " ="
 	for i := start + 1; i < end; i++ {
 		trimmed := strings.TrimSpace(lines[i])
 		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			continue
 		}
-		if strings.HasPrefix(trimmed, prefix) {
+		parsedKey, ok := parseAssignmentKey(lines[i])
+		if ok && parsedKey == key {
 			return i, findValueEnd(lines, i, end)
 		}
 	}
@@ -261,20 +368,9 @@ func findKey(lines []string, start int, end int, key string) (int, int) {
 }
 
 func findValueEnd(lines []string, keyIndex int, end int) int {
-	line := lines[keyIndex]
-	eqIndex := strings.Index(line, "=")
-	if eqIndex < 0 {
-		return keyIndex + 1
-	}
-
-	depth := bracketDelta(line[eqIndex+1:])
-	if depth <= 0 {
-		return keyIndex + 1
-	}
-
-	for i := keyIndex + 1; i < end; i++ {
-		depth += bracketDelta(lines[i])
-		if depth <= 0 {
+	for i := keyIndex; i < end; i++ {
+		snippet := strings.Join(lines[keyIndex:i+1], "\n")
+		if isCompleteTomlAssignment(snippet) {
 			return i + 1
 		}
 	}
@@ -282,8 +378,61 @@ func findValueEnd(lines []string, keyIndex int, end int) int {
 	return end
 }
 
-func bracketDelta(text string) int {
-	return strings.Count(text, "[") - strings.Count(text, "]")
+func parseAssignmentKey(line string) (string, bool) {
+	index := assignmentIndex(line)
+	if index < 0 {
+		return "", false
+	}
+
+	key := strings.TrimSpace(line[:index])
+	if key == "" {
+		return "", false
+	}
+	return key, true
+}
+
+func assignmentIndex(line string) int {
+	inBasicString := false
+	inLiteralString := false
+	escaped := false
+	for i := 0; i < len(line); i++ {
+		ch := line[i]
+		switch {
+		case inBasicString:
+			if escaped {
+				escaped = false
+				continue
+			}
+			if ch == '\\' {
+				escaped = true
+				continue
+			}
+			if ch == '"' {
+				inBasicString = false
+			}
+		case inLiteralString:
+			if ch == '\'' {
+				inLiteralString = false
+			}
+		default:
+			switch ch {
+			case '#':
+				return -1
+			case '"':
+				inBasicString = true
+			case '\'':
+				inLiteralString = true
+			case '=':
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+func isCompleteTomlAssignment(snippet string) bool {
+	values := map[string]any{}
+	return toml.Unmarshal([]byte(snippet), &values) == nil
 }
 
 func insertLines(lines []string, at int, inserts []string) []string {

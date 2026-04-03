@@ -47,12 +47,13 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 
 	lastFingerprint, tracked := stateFile.Fingerprints[path]
 	if !tracked {
+		reason := reasonForNewOwnedPath(state)
 		if !actualPresent {
 			return Change{
 				Status:  ChangeCreate,
 				File:    file,
 				Path:    path,
-				Reason:  ReasonTemplateUpgrade,
+				Reason:  reason,
 				Summary: createSummary(path, displayDesired),
 				After:   displayDesired,
 			}
@@ -62,7 +63,7 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 				Status:  ChangeNoOp,
 				File:    file,
 				Path:    path,
-				Reason:  ReasonTemplateUpgrade,
+				Reason:  reason,
 				Summary: noOpSummary(path),
 				After:   displayDesired,
 			}
@@ -71,7 +72,7 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 			Status:  ChangeConflict,
 			File:    file,
 			Path:    path,
-			Reason:  ReasonTemplateUpgrade,
+			Reason:  reason,
 			Summary: conflictSummary(path, displayActual, displayDesired, false),
 			Before:  displayActual,
 			After:   displayDesired,
@@ -126,6 +127,13 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 
 func reasonForDesiredChange(state *State, lastFingerprint string, desiredFingerprint string) ChangeReason {
 	if state != nil && state.TemplateVersion != TemplateVersion && lastFingerprint != desiredFingerprint {
+		return ReasonTemplateUpgrade
+	}
+	return ReasonDesiredState
+}
+
+func reasonForNewOwnedPath(state *State) ChangeReason {
+	if state != nil && state.TemplateVersion != TemplateVersion {
 		return ReasonTemplateUpgrade
 	}
 	return ReasonDesiredState

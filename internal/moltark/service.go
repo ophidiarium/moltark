@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 )
 
 type Service struct{}
@@ -151,6 +152,15 @@ func (Service) Apply(root string, plan Plan) (ApplyResult, error) {
 		return ApplyResult{}, fmt.Errorf("cannot apply a plan with conflicts")
 	}
 
+	freshPlan, err := (Service{}).Plan(root)
+	if err != nil {
+		return ApplyResult{}, err
+	}
+	if !sameApplyIntent(plan, freshPlan) {
+		return ApplyResult{}, fmt.Errorf("repository changed since planning; rerun `moltark plan` and review the updated changes")
+	}
+	plan = freshPlan
+
 	wrote := []string{}
 	for _, managedFile := range plan.Resolved.ManagedFiles {
 		doc := plan.fileDocs[managedFile.Path]
@@ -190,6 +200,30 @@ func (Service) Apply(root string, plan Plan) (ApplyResult, error) {
 		Plan:  plan,
 		Wrote: wrote,
 	}, nil
+}
+
+func sameApplyIntent(left Plan, right Plan) bool {
+	return reflect.DeepEqual(left.Desired, right.Desired) &&
+		reflect.DeepEqual(left.Resolved, right.Resolved) &&
+		reflect.DeepEqual(left.State, right.State) &&
+		reflect.DeepEqual(actionableChanges(left.Changes), actionableChanges(right.Changes)) &&
+		reflect.DeepEqual(actionableSummary(left.Summary), actionableSummary(right.Summary))
+}
+
+func actionableChanges(changes []Change) []Change {
+	filtered := make([]Change, 0, len(changes))
+	for _, change := range changes {
+		if change.Status == ChangeNoOp {
+			continue
+		}
+		filtered = append(filtered, change)
+	}
+	return filtered
+}
+
+func actionableSummary(summary PlanSummary) PlanSummary {
+	summary.NoOp = 0
+	return summary
 }
 
 func (s Service) Show(root string) (ShowReport, error) {

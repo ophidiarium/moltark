@@ -1412,7 +1412,7 @@ stdout:
         "project.version": "\"0.1.0\"",
         "tool.moltark.schema-version": "1",
         "tool.moltark.template-version": "\"python/v2\"",
-        "tool.uv.workspace.members": "[\"_integrations/vscode-tally\",\"_integrations/intellij-tally\"]"
+        "tool.uv.workspace.members": "[\"_integrations/vscode-tally\", \"_integrations/intellij-tally\"]"
       }
     }
   }

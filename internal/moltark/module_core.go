@@ -380,13 +380,14 @@ func starlarkStringList(value starlark.Value, label string) ([]string, error) {
 		return nil, nil
 	}
 
-	iterable, ok := value.(starlark.Iterable)
-	if !ok {
+	switch value.(type) {
+	case *starlark.List, starlark.Tuple:
+	default:
 		return nil, fmt.Errorf("%s must be a list of strings", label)
 	}
 
 	values := []string{}
-	iter := iterable.Iterate()
+	iter := value.(starlark.Iterable).Iterate()
 	defer iter.Done()
 	var item starlark.Value
 	for iter.Next(&item) {

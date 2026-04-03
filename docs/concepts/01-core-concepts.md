@@ -114,4 +114,4 @@ State is required for:
 
 The current implementation is still Python-first.
 
-The internal model is more general than the file mutators, but only the Python `pyproject.toml` path is actually reconciled today. That is an intentional staging choice, not the intended final product shape.
+The internal model is more general than the current file mutators. Aside from Moltark's own `.gitattributes` block and `.moltark/state.json`, only Python `pyproject.toml` surfaces are actually reconciled today. That is an intentional staging choice, not the intended final product shape.

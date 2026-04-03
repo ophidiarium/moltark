@@ -34,6 +34,8 @@ func InitRepository(root string) (string, error) {
 	path := filepath.Join(root, MoltarkfileName)
 	if _, err := os.Stat(path); err == nil {
 		return "Moltarkfile already exists. No changes made.", nil
+	} else if !os.IsNotExist(err) {
+		return "", fmt.Errorf("stat %s: %w", MoltarkfileName, err)
 	}
 
 	name := filepath.Base(root)
@@ -107,7 +109,9 @@ func (b *desiredModelBuilder) useModule(_ *starlark.Thread, _ *starlark.Builtin,
 		return nil, err
 	}
 
-	_ = version
+	if version != "" {
+		return nil, fmt.Errorf("module version selection is not implemented yet for %q", source)
+	}
 
 	module, err := b.loadLocalModule(source)
 	if err != nil {

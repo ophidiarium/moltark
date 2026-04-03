@@ -30,6 +30,14 @@ func loadState(root string) (stateDocument, error) {
 	if err := json.Unmarshal(raw, &state); err != nil {
 		return stateDocument{}, fmt.Errorf("parse %s: %w", path, err)
 	}
+	if state.SchemaVersion != SchemaVersion {
+		return stateDocument{}, fmt.Errorf(
+			"parse %s: unsupported schema_version %d (expected %d)",
+			path,
+			state.SchemaVersion,
+			SchemaVersion,
+		)
+	}
 
 	return stateDocument{
 		Exists: true,
