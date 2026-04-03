@@ -169,8 +169,9 @@ Initial ecosystem support:
 After that, Moltark is expected to expand into:
 
 - Bazel, where Starlark-native and code-driven configuration are a particularly strong fit
-- TypeScript, where evolving code-based configuration stubs and shared tooling defaults becomes especially valuable
-
+- broader support for ecosystems with code-based configuration, starting with TypeScript and Ruby
+- extensible config stubs that can evolve from generated defaults into maintainable project-owned code
+  
 ## License
 
 AGPL
