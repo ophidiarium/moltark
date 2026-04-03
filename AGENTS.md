@@ -1,291 +1,191 @@
 # AGENTS.md
 
-## Purpose
+## Mission
 
-Moltark is a modern software project templater with first-class support for updates and template evolution.
+Moltark is a project templater for long-term template evolution, not one-shot scaffolding.
 
-The goal is not just to scaffold a repository once, but to let projects continue adopting improvements from shared templates over time.
+Optimize decisions for:
 
-Agents working in this repository should optimize for that long-term goal.
+- bootstrapping projects from reusable templates
+- composing templates from smaller building blocks
+- updating existing projects as templates evolve
+- keeping generated output readable, reviewable, and project-owned
+- enabling team and organization defaults to evolve over time
 
-## Product direction
+If a choice helps initial generation but weakens future updates, it is the wrong default.
 
-Moltark should evolve toward these outcomes:
+## Current focus
 
-- bootstrap new projects from reusable templates
-- compose templates from smaller building blocks
-- update existing projects to newer template versions
-- keep generated output understandable, reviewable, and project-owned
-- make project setup reusable at team and organization scale
+Build depth before breadth.
 
-Moltark is not a one-shot generator. Its core value is maintaining the relationship between a project and its evolving template source.
-
-## Initial scope
-
-Near-term implementation should focus on:
+Prioritize:
 
 - Go CLI
 - Starlark module system
 - bootstrap workflow
 - update and reconciliation engine
 
-Initial ecosystem support is intentionally narrow:
+Supported ecosystems for now:
 
 - Go
 - Python
 - Rust
 
-This narrow scope is deliberate. Prefer depth and solid architecture over broad early ecosystem coverage.
+Do not optimize early for broad ecosystem support.
 
-## Planned evolution
+## Default stance
 
-The next architectural expansion areas are:
+Prefer:
 
-- Bazel, where Starlark-native and code-driven configuration are a natural fit
-- support for ecosystems with code-based configuration, starting with TypeScript and Ruby
-- extensible config stubs that can evolve from generated defaults into maintainable project-owned code
+- update-safe models over one-shot generation shortcuts
+- explicit state and plans over hidden side effects
+- composable building blocks over large rigid archetypes
+- deterministic behavior over convenience magic
+- readable repo-owned output over opaque internal machinery
+- designs that leave room for structural editing, not just file rewrites
 
-When making design choices, avoid baking in assumptions that only work for static file templating.
+Avoid:
 
-## Core principles
+- treating updates as an afterthought
+- ad hoc string manipulation for core state transitions
+- assumptions that every target file can be regenerated from scratch
+- large archetype templates when smaller modules would do
+- vague CLI behavior or hidden mutations
 
-### 1. Updates are first-class
+## Required design questions
 
-Do not treat updates as an afterthought.
+For any feature touching templates, rendering, metadata, state, reconciliation, or CLI UX, answer:
 
-When designing APIs, state models, template metadata, file rendering, or CLI flows, always ask:
+1. How does an existing project adopt a newer template version?
+2. How is drift detected?
+3. How are conflicts surfaced?
+4. Which user-owned edits are preserved?
+5. What can the user inspect before changes are applied?
 
-- how will an existing project adopt a newer template version?
-- how will drift be detected?
-- how will conflicts be surfaced?
-- how will user-owned modifications be preserved?
+If these answers are weak, the design is incomplete.
 
-If a design is good for initial generation but weak for later reconciliation, it is incomplete.
-
-### 2. Generated output must remain project-owned
-
-Moltark should help maintain projects, not trap them behind opaque machinery.
-
-Favor designs where:
-
-- generated files stay readable
-- users can understand what was written and why
-- changes are reviewable in normal code review
-- ownership stays with the repository, not hidden runtime state
-
-Avoid designs that require users to trust unexplained magic.
-
-### 3. Composition matters more than monoliths
-
-Templates should be composable from smaller reusable building blocks.
-
-Favor:
-
-- modular template primitives
-- explicit composition boundaries
-- small reusable units over giant all-in-one templates
-
-Do not let the system collapse into a collection of large, rigid project archetypes.
-
-### 4. Governance is a real use case
-
-Moltark is not just a convenience scaffold tool. It can become a governance mechanism for teams and organizations.
-
-Features should make it possible to standardize and evolve things like:
-
-- linting and formatting
-- spell checking
-- license validation
-- duplication detection
-- complexity monitoring
-- CI/CD setup
-- git hooks
-- release automation
-- repository metadata
-- security and compliance defaults
-
-Design toward reusable organizational defaults, not only individual-project ergonomics.
-
-### 5. AI-era workflows need stronger guardrails
-
-Moltark should be useful in projects increasingly changed by coding agents.
-
-That means the repository setup it produces should support:
-
-- strict, automated feedback loops
-- maintainability checks in CI/CD
-- clear machine-readable structure
-- conventions that reduce drift
-- evolving quality controls over time
-
-Do not optimize only for human manual setup. Optimize for long-lived repositories that will be modified by both humans and agents.
-
-### 6. Determinism and reviewability matter
-
-Prefer deterministic behavior and explicit planning over hidden side effects.
-
-When possible, structure features so users can inspect:
-
-- what Moltark believes the desired state is
-- what changed since last application
-- what update is about to happen
-- where conflicts or ambiguity exist
-
-A good update engine should make change visible before it makes change automatic.
-
-## Design guidance
+## Design rules
 
 ### Template model
 
-The template system should eventually support more than raw file rendering.
-
-Design toward a model that can express:
+Design for more than file copying. The model should leave room for:
 
 - file generation
-- file updates
-- merge/reconciliation behavior
+- file updates and reconciliation
 - ownership boundaries
-- metadata needed for future updates
+- metadata needed for future upgrades
+- structured edits where rewrite-from-scratch is unsafe
 
-Avoid reducing the system to “copy files with variables.”
+Do not reduce Moltark to "copy files with variables."
 
-### Starlark usage
-
-Starlark is important, but it is not the product by itself.
+### Starlark
 
 Use Starlark where it improves:
 
-- composability
+- composition
 - determinism
 - portability
 - understandable configuration logic
 
-Do not introduce unnecessary complexity just to make the system feel more dynamic.
+Do not add complexity just to make the system feel dynamic.
 
-### Code-based config support
+### Code-based configuration
 
-Future support for Bazel, TypeScript, and Ruby means Moltark will need to handle code-based configuration, not just static formats.
+Future support for Bazel, TypeScript, and Ruby means code-based config is a real target.
 
-Keep this in mind when designing abstractions around:
+Keep room for:
 
-- config stubs
-- file ownership
-- safe updates
+- config stubs that can evolve into project-owned code
 - structural edits
-- reconciliation strategies
+- ownership-aware updates
+- safe reconciliation of partially user-edited files
 
-Do not assume every target file can be safely rewritten from scratch.
+Do not assume line-based patching or full rewrites will always be sufficient.
 
 ### CLI UX
 
-The CLI should feel predictable and professional.
+CLI output should help users answer:
 
-Favor commands and output that help users answer:
+- what will be generated
+- what will be updated
+- what changed
+- what requires manual intervention
+- how the project relates to its template modules
 
-- what will be generated?
-- what will be updated?
-- what changed?
-- what requires manual intervention?
-- how is this project related to its template modules?
+Favor explicit plans and diagnostics over vague success messages.
 
-Avoid vague success messages and hidden mutations.
+## Implementation rules
 
-## Implementation guidance
+- Favor architecture over surface area. A smaller coherent system is better than more commands, flags, or ecosystems.
+- Keep internal models explicit: project state, template state, desired outputs, update plans, drift, and conflicts.
+- Generated output must stay understandable in normal code review.
+- Preserve room for AST, CST, or structure-aware editing where needed.
+- When choosing between bootstrap convenience and update safety, choose update safety.
 
-### Prefer architecture over surface area
+## Governance and AI workflows
 
-Early on, resist adding many ecosystems, many commands, or many flags.
+Moltark should support repositories maintained by both humans and coding agents.
 
-A smaller system with a sound template/update model is more valuable than a feature-rich scaffold tool with no coherent reconciliation story.
+Prefer designs that improve:
 
-### Keep internal models explicit
+- strong CI feedback loops
+- maintainability and policy checks
+- machine-readable structure
+- reusable team and organization defaults
+- reduced drift over time
 
-Prefer explicit internal representations for:
+This is not just a scaffold tool. It should be able to carry evolving standards across many repositories.
 
-- project state
-- template state
-- desired outputs
-- update plans
-- drift/conflict detection
+## Testing
 
-Avoid spreading critical behavior across ad hoc string manipulation.
+Testing should be fixture-driven and behavior-oriented.
 
-### Preserve room for structural editing
+Prefer:
 
-Some future targets will require updating structured or code-based config files.
+- input fixture -> operation -> observable outcome
+- integration-style tests for core behavior
+- `go-snaps` when outputs are naturally textual or structured
+- Gherkin scenarios when Given/When/Then improves readability
 
-Where possible, keep room for AST/CST-based or structure-aware editing rather than assuming line-based patching is sufficient.
-
-## Testing approach
-
-Testing should be **fixture-driven**.
-
-Prefer tests that describe a project state, apply Moltark behavior, and assert the resulting outcome through highly observable artifacts. The goal is to make tests easy to read, resilient during large refactorings, and strongly aligned with real product behavior.
-
-Favor a model like:
-
-- **input fixture** → project/template/module state before execution
-- **operation** → generate, update, reconcile, detect drift, etc.
-- **observable outcome** → resulting files, plans, diagnostics, conflicts, or snapshots
-
-### Testing principles
-
-- Prefer **fixture-based integration tests** over narrow implementation-detail unit tests for core behavior
-- Keep tests **human-readable** and easy to inspect in code review
-- Optimize for **observability**: when a test fails, it should be obvious what changed and why
-- Preserve **relevance across refactorings**: tests should validate behavior and outputs, not incidental internal structure
-- Make update/reconciliation scenarios first-class, not just initial generation
-
-### Preferred tools and styles
-
-Steer the test suite toward:
-
-- **`go-snaps`** for snapshot-based assertions where the output is naturally textual or structured
-- **Gherkin feature scenarios** where behavior benefits from explicit Given/When/Then framing
-
-These should be used to make behavior legible, not to hide complexity.
-
-### What to test
-
-Core scenarios should include:
+Core scenarios should cover:
 
 - bootstrap from fixtures
-- re-apply without changes
-- template evolution across versions
+- re-apply with no changes
+- template version upgrades
 - drift detection
 - conflict surfacing
 - preservation of intended user edits
 - update planning and execution
-- diagnostics and user-visible output
+- user-visible diagnostics
 
-### Test design guidance
+A good test should read like a real repository evolution scenario and fail with obvious artifacts.
 
-- Prefer a small number of **high-signal fixtures** over many shallow tests
-- Keep fixture names descriptive and scenario-oriented
-- Snapshot the most useful observable artifacts: generated files, update plans, diffs, diagnostics
-- Avoid brittle assertions on incidental formatting unless formatting is the behavior being tested
-- Ensure failures are easy to understand without stepping through implementation details
+## Agent checklist
 
-A Moltark test should read like an example of real repository evolution, not like a microscopic probe into private internals.
+Before finishing meaningful work, check:
+
+- does this improve or at least preserve the update and reconciliation story
+- are state transitions explicit instead of hidden in ad hoc behavior
+- would the generated or updated output make sense in normal code review
+- if behavior changed, is there fixture-driven coverage for the relevant scenario
+- did the change stay within current scope instead of expanding surface area by default
 
 ## Non-goals for now
 
 Do not prematurely optimize for:
 
-- supporting every programming language
+- every language or ecosystem
 - becoming a general-purpose build tool
-- reproducing Projen exactly
-- implementing a full IDE/editor integration story
+- reproducing Projen
+- full IDE or editor integration
 - solving every config-language mutation problem in v1
-
-The immediate goal is to establish a strong foundation for bootstrap + update in a focused set of ecosystems.
 
 ## When uncertain
 
-When facing design ambiguity, prefer the option that better supports:
+Choose the option that best supports, in order:
 
 1. long-term template evolution
-2. understandable generated output
+2. understandable project-owned output
 3. deterministic and reviewable updates
 4. composable organizational defaults
-5. future support for code-based configuration
+5. future code-based configuration support
