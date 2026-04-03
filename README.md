@@ -74,11 +74,9 @@ AI systems are fast, but they also amplify inconsistency when the surrounding pr
 
 That makes updatable project templates even more valuable. The right defaults can be established once, then continuously improved and propagated as tooling, standards, and workflows evolve.
 
-This is especially important because these standards are changing quickly. In the AI era, project conventions are not static. New linters, complexity watchers, repository policies, and agent workflows are emerging at a much higher rate than in traditional software environments.
+This is especially important because these standards are changing quickly. In the AI era, project conventions are not static. New linters, duplication detectors, complexity watchers, repository policies, and agent workflows are emerging at a much higher rate than in traditional software environments.
 
-Moltark is designed for that reality: not just to generate projects, but to help them keep pace with rapidly evolving engineering standards.
-
-For example, organizational tooling such as [mehen](https://github.com/ophidiarium/mehen) can become part of a project's default posture rather than an optional later add-on.
+Moltark is designed for that reality: not just to generate projects, but to help them keep pace with rapidly evolving engineering standards, including CI/CD-integrated maintainability checks such as linting, duplication detection, and complexity monitoring with tools like [mehen](https://github.com/ophidiarium/mehen).
 
 ## Planned capabilities
 
