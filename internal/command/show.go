@@ -36,10 +36,11 @@ func (c *ShowCommand) Run(args []string) int {
 func (c *ShowCommand) Help() string {
 	return `Usage: moltark show
 
-  Print the interpreted Moltark model, current state, and current
-  repository-owned values as JSON.`
+  Print the Moltark engine pipeline artifacts as JSON, including the
+  evaluated model, resolved capabilities, inspected repository state,
+  planned changes, and candidate persisted state.`
 }
 
 func (c *ShowCommand) Synopsis() string {
-	return "Show the interpreted model and state"
+	return "Show Moltark pipeline artifacts and state"
 }

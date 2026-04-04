@@ -2,14 +2,17 @@
 
 Moltark is a reconciler, not a one-shot generator.
 
-The current system follows this pipeline:
+The current system now exposes explicit engine phases:
 
-1. Evaluate `Moltarkfile`.
-2. Build a desired in-memory project model.
-3. Resolve module-provided capabilities and routed intents into a concrete reconciled model.
-4. Inspect the repository state.
-5. Produce a plan.
-6. Apply only the managed file edits that are safe and explainable.
+1. `evaluate`: load `Moltarkfile` into a desired in-memory model.
+2. `resolve`: turn module-provided files, facts, providers, and routed intents into a concrete reconciled model.
+3. `inspect`: read the current repository surfaces Moltark cares about.
+4. `persist`: compute the candidate next `.moltark/state.json`.
+5. `plan`: classify changes from desired state, current state, and candidate persisted state.
+
+`apply` then executes only the managed file edits that are safe and explainable.
+
+This matters because Moltark is not just a renderer. The phase boundaries are part of the product: they make drift, conflict, adoption, and future migrations easier to reason about and expose through CLI diagnostics.
 
 ## Repository Model
 

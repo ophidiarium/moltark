@@ -291,17 +291,64 @@ type fileDocument struct {
 	Values map[string]any
 }
 
-type Plan struct {
-	Desired  DesiredModel  `json:"desired"`
-	Resolved ResolvedModel `json:"resolved"`
-	State    *State        `json:"state,omitempty"`
-	Changes  []Change      `json:"changes"`
-	Summary  PlanSummary   `json:"summary"`
+type EvaluationPhase struct {
+	Desired DesiredModel `json:"desired"`
+}
 
-	fileDocs            map[string]fileDocument
-	stateRaw            string
-	gitattributesRaw    string
-	gitattributesExists bool
+type ResolutionPhase struct {
+	Resolved ResolvedModel `json:"resolved"`
+}
+
+type InspectedStructuredFile struct {
+	Path              string            `json:"path"`
+	Format            string            `json:"format"`
+	Exists            bool              `json:"exists"`
+	OwnedValues       map[string]string `json:"owned_values,omitempty"`
+	UserManagedValues map[string]string `json:"user_managed_values,omitempty"`
+}
+
+type GitattributesInspection struct {
+	Exists       bool   `json:"exists"`
+	ManagedBlock string `json:"managed_block"`
+}
+
+type InspectionPhase struct {
+	StateFile       string                    `json:"state_file"`
+	CurrentState    *State                    `json:"current_state,omitempty"`
+	StructuredFiles []InspectedStructuredFile `json:"structured_files"`
+	Gitattributes   GitattributesInspection   `json:"gitattributes"`
+}
+
+type PersistPhase struct {
+	StateFile string `json:"state_file"`
+	NextState *State `json:"next_state,omitempty"`
+}
+
+type PlanningPhase struct {
+	Changes []Change    `json:"changes"`
+	Summary PlanSummary `json:"summary"`
+}
+
+type Pipeline struct {
+	Root     string          `json:"-"`
+	Evaluate EvaluationPhase `json:"evaluate"`
+	Resolve  ResolutionPhase `json:"resolve"`
+	Inspect  InspectionPhase `json:"inspect"`
+	Persist  PersistPhase    `json:"persist"`
+	Plan     PlanningPhase   `json:"plan"`
+
+	fileDocs         map[string]fileDocument
+	stateRaw         string
+	nextStateRaw     string
+	gitattributesRaw string
+}
+
+type Plan struct {
+	Desired   DesiredModel  `json:"desired"`
+	Resolved  ResolvedModel `json:"resolved"`
+	NextState *State        `json:"next_state,omitempty"`
+	Changes   []Change      `json:"changes"`
+	Summary   PlanSummary   `json:"summary"`
 }
 
 func (p Plan) HasConflicts() bool {
@@ -315,13 +362,6 @@ func (p Plan) HasActionableChanges() bool {
 type ApplyResult struct {
 	Plan  Plan     `json:"plan"`
 	Wrote []string `json:"wrote"`
-}
-
-type ShowReport struct {
-	Desired            DesiredModel                 `json:"desired"`
-	Resolved           ResolvedModel                `json:"resolved"`
-	State              *State                       `json:"state,omitempty"`
-	CurrentOwnedValues map[string]map[string]string `json:"current_owned_values"`
 }
 
 type DoctorReport struct {

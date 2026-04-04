@@ -9,6 +9,7 @@ The docs are arranged for incremental discovery:
 3. Then read [Execution Model](./concepts/03-execution-model.md).
 4. If you are changing tests or adding behavior, read [Testing](./testing.md).
 5. If you are evaluating architecture decisions, read [Future Paths](./future-paths.md).
+6. If you need prior-art and external comparisons, read [Research Notes](./research/README.md).
 
 ## Current Scope
 
@@ -30,3 +31,4 @@ If you need to understand:
 - the difference between synth hooks, bootstrap requirements, user tasks, and triggers: [Execution Model](./concepts/03-execution-model.md)
 - how snapshots and Gherkin tests are organized: [Testing](./testing.md)
 - what is intentionally not implemented yet: [Future Paths](./future-paths.md)
+- what we learned from adjacent tools and internal notes: [Research Notes](./research/README.md)
