@@ -3,22 +3,20 @@ package testutil
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"testing"
 
 	"github.com/ophidiarium/moltark/internal/cliapp"
+	"github.com/ophidiarium/moltark/internal/testrepo"
 )
 
-var repoRoot = func() string {
-	_, filename, _, _ := runtime.Caller(0)
-	return filepath.Clean(filepath.Join(filepath.Dir(filename), "..", ".."))
-}()
+func RepoPath(path string) string {
+	return testrepo.RepoPath(path)
+}
 
 type CommandResult struct {
 	ExitCode int
@@ -27,7 +25,7 @@ type CommandResult struct {
 }
 
 func FixturePath(name string) string {
-	return filepath.Join(repoRoot, "tests", "fixtures", name)
+	return testrepo.FixturePath(name)
 }
 
 func PrepareFixture(name string) (string, error) {
@@ -60,45 +58,7 @@ func CopyFixture(t *testing.T, name string) string {
 	return dir
 }
 
-func CopyDir(src string, dst string) error {
-	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		rel, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-		target := filepath.Join(dst, rel)
-
-		if d.IsDir() {
-			return os.MkdirAll(target, 0o755)
-		}
-
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-			return err
-		}
-
-		in, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer in.Close()
-
-		out, err := os.Create(target)
-		if err != nil {
-			return err
-		}
-		defer out.Close()
-
-		if _, err := io.Copy(out, in); err != nil {
-			return err
-		}
-
-		return out.Close()
-	})
-}
+func CopyDir(src string, dst string) error { return testrepo.CopyDir(src, dst) }
 
 func RunCLIInDir(dir string, stdin string, args ...string) CommandResult {
 	var stdout bytes.Buffer

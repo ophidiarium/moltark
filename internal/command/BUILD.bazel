@@ -1,0 +1,17 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "command",
+    srcs = [
+        "apply.go",
+        "doctor.go",
+        "init.go",
+        "meta.go",
+        "plan.go",
+        "show.go",
+        "version.go",
+    ],
+    importpath = "github.com/ophidiarium/moltark/internal/command",
+    visibility = ["//:__subpackages__"],
+    deps = ["//internal/moltark"],
+)

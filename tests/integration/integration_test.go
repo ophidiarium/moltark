@@ -10,6 +10,10 @@ import (
 	"github.com/ophidiarium/moltark/internal/testutil"
 )
 
+var integrationSnaps = snaps.WithConfig(
+	snaps.Dir(testutil.RepoPath("tests/integration/__snapshots__")),
+)
+
 func TestBootstrapAndReapply(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "demo")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -25,7 +29,7 @@ func TestBootstrapAndReapply(t *testing.T) {
 		t.Fatalf("unexpected exit codes: init=%d plan=%d apply=%d replan=%d", initResult.ExitCode, planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark init", initResult),
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
@@ -45,7 +49,7 @@ func TestPreserveUserManagedDependencies(t *testing.T) {
 		t.Fatalf("unexpected exit codes: plan=%d apply=%d doctor=%d", planResult.ExitCode, applyResult.ExitCode, doctorResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
 		testutil.RenderCommand("moltark doctor", doctorResult),
@@ -63,7 +67,7 @@ func TestDriftDetection(t *testing.T) {
 		t.Fatalf("unexpected exit codes: plan=%d doctor=%d", planResult.ExitCode, doctorResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark doctor", doctorResult),
 		testutil.RenderRepoState(t, dir),
@@ -80,7 +84,7 @@ func TestConflictSurfacing(t *testing.T) {
 		t.Fatalf("unexpected exit codes: plan=%d apply=%d", planResult.ExitCode, applyResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
 		testutil.RenderRepoState(t, dir),
@@ -98,7 +102,7 @@ func TestTemplateVersionUpgrade(t *testing.T) {
 		t.Fatalf("unexpected exit codes: plan=%d apply=%d replan=%d", planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
 		testutil.RenderCommand("moltark plan", replanResult),
@@ -118,7 +122,7 @@ func TestUVWorkspaceWithParentRelativeMembers(t *testing.T) {
 		t.Fatalf("unexpected exit codes: plan=%d apply=%d replan=%d show=%d", planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode, showResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
 		testutil.RenderCommand("moltark plan", replanResult),
@@ -139,7 +143,7 @@ func TestCoreTasksAndTriggerBindings(t *testing.T) {
 		t.Fatalf("unexpected exit codes: plan=%d apply=%d replan=%d show=%d", planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode, showResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
 		testutil.RenderCommand("moltark plan", replanResult),
@@ -160,7 +164,7 @@ func TestGoLintVscodeComponentOnly(t *testing.T) {
 		t.Fatalf("unexpected exit codes: plan=%d apply=%d replan=%d show=%d", planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode, showResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
 		testutil.RenderCommand("moltark plan", replanResult),
@@ -181,7 +185,7 @@ func TestCoreStructuredFilePrimitives(t *testing.T) {
 		t.Fatalf("unexpected exit codes: plan=%d apply=%d replan=%d show=%d", planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode, showResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
 		testutil.RenderCommand("moltark plan", replanResult),

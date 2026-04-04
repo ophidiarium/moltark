@@ -1,0 +1,19 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "testutil",
+    srcs = ["testutil.go"],
+    importpath = "github.com/ophidiarium/moltark/internal/testutil",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/cliapp",
+        "//internal/testrepo",
+    ],
+)
+
+go_test(
+    name = "testutil_test",
+    size = "small",  # keep
+    srcs = ["testutil_test.go"],
+    embed = [":testutil"],
+)

@@ -1,0 +1,19 @@
+# gazelle:build_file_name BUILD.bazel
+# gazelle:prefix github.com/ophidiarium/moltark
+# gazelle:go_naming_convention import
+# gazelle:exclude docs
+# gazelle:exclude tests/fixtures
+# gazelle:exclude tests/integration/__snapshots__
+
+load("@gazelle//:def.bzl", "gazelle")
+
+package(default_visibility = ["//visibility:public"])
+
+gazelle(
+    name = "gazelle",
+)
+
+alias(
+    name = "moltark",
+    actual = "//cmd/moltark",
+)

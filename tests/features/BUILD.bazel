@@ -1,0 +1,21 @@
+load("//tools/bazel:gherkin_defs.bzl", "gherkin_library", "godog_feature_test")
+
+gherkin_library(
+    name = "feature_specs",
+    srcs = ["uv_dependencies.feature"],
+)
+
+godog_feature_test(
+    name = "features_test",
+    size = "small",  # keep
+    srcs = ["uv_dependencies_test.go"],
+    data = [
+        # keep
+        "//tests/fixtures:all_fixtures",
+    ],
+    features = [":feature_specs"],
+    deps = [
+        "//internal/testutil",
+        "@com_github_cucumber_godog//:godog",
+    ],
+)

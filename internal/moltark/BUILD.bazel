@@ -1,0 +1,65 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "moltark",
+    srcs = [
+        "config.go",
+        "constants.go",
+        "fact_ref_value.go",
+        "gitattributes.go",
+        "jsonfile.go",
+        "module_core.go",
+        "module_python.go",
+        "module_uv.go",
+        "modules.go",
+        "pipeline.go",
+        "plan.go",
+        "pyproject.go",
+        "resolve.go",
+        "service.go",
+        "starlark_convert.go",
+        "state.go",
+        "structured_paths.go",
+        "types.go",
+        "yamlfile.go",
+    ],
+    importpath = "github.com/ophidiarium/moltark/internal/moltark",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "@com_github_goccy_go_yaml//:go-yaml",
+        "@com_github_pelletier_go_toml_v2//:go-toml",
+        "@net_starlark_go//starlark",
+        "@net_starlark_go//starlarkstruct",
+        "@net_starlark_go//syntax",
+    ],
+)
+
+go_test(
+    name = "moltark_test",
+    size = "small",  # keep
+    srcs = [
+        "config_test.go",
+        "facts_test.go",
+        "gitattributes_test.go",
+        "jsonfile_test.go",
+        "module_core_test.go",
+        "pipeline_test.go",
+        "plan_test.go",
+        "pyproject_test.go",
+        "resolve_test.go",
+        "service_test.go",
+        "state_test.go",
+        "structured_paths_test.go",
+        "yamlfile_test.go",
+    ],
+    data = [
+        # keep
+        "//tests/fixtures:all_fixtures",
+    ],
+    embed = [":moltark"],
+    deps = [
+        "//internal/testrepo",
+        "@com_github_pelletier_go_toml_v2//:go-toml",
+        "@net_starlark_go//starlark",
+    ],
+)

@@ -31,6 +31,31 @@ For the current component-centric direction, start with:
 - lightweight project anchors in [`docs/concepts/01-core-concepts.md`](./docs/concepts/01-core-concepts.md)
 - module/provider boundaries, first-class `json_file` / `toml_file` / `yaml_file` primitives, the minimal Go + VS Code example, and opaque root projects in [`docs/concepts/02-modules-and-providers.md`](./docs/concepts/02-modules-and-providers.md)
 
+## Development
+
+The repo now includes a Bazel build maintained with Gazelle using modern bzlmod configuration.
+
+Use [`bazelisk`](https://github.com/bazelbuild/bazelisk) so the version pinned in [`.bazelversion`](./.bazelversion) is selected automatically.
+
+Common commands:
+
+- regenerate and normalize Go `BUILD.bazel` files: `bazelisk run //:gazelle`
+- build the CLI: `bazelisk build //:moltark`
+- run the Bazel suite: `bazelisk test //...`
+- run the Go suite directly: `go test ./...`
+
+The Bazel setup is intentionally Gazelle-first:
+
+- `MODULE.bazel` owns external dependency resolution through `rules_go` and Gazelle's `go_deps`
+- the root [`BUILD.bazel`](./BUILD.bazel) owns the Gazelle entrypoint and repo-level directives
+- package-level `BUILD.bazel` files are generated and then only hand-maintained where Gazelle cannot infer runtime data such as fixtures, snapshots, and `.feature` files
+
+For Gherkin specifically:
+
+- feature files are modeled as first-class Bazel inputs through local `gherkin_library(...)` rules in [`tools/bazel/gherkin_defs.bzl`](./tools/bazel/gherkin_defs.bzl)
+- execution still goes through the existing Go `godog` suite
+- the local `godog_feature_test(...)` macro wires transitive `.feature` files into Bazel runfiles without pulling in a separate Ruby or C++ runtime
+
 ## The problem
 
 Most project generators are good at one thing: creating a starting point.

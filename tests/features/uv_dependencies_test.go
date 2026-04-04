@@ -106,8 +106,10 @@ func TestFeatures(t *testing.T) {
 		Name:                "moltark-features",
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
-			Format:   "pretty",
-			Paths:    []string{"."},
+			Format: "pretty",
+			Paths: []string{
+				testutil.RepoPath(filepath.ToSlash(filepath.Join("tests", "features", "uv_dependencies.feature"))),
+			},
 			TestingT: t,
 		},
 	}
