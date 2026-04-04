@@ -206,7 +206,7 @@ func TestOpaqueRootProjectWithPythonChild(t *testing.T) {
 		t.Fatalf("unexpected exit codes: plan=%d apply=%d replan=%d show=%d", planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode, showResult.ExitCode)
 	}
 
-	snaps.MatchSnapshot(t, renderSession(
+	integrationSnaps.MatchSnapshot(t, renderSession(
 		testutil.RenderCommand("moltark plan", planResult),
 		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
 		testutil.RenderCommand("moltark plan", replanResult),
