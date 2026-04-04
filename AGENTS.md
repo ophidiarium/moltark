@@ -25,13 +25,51 @@ Prioritize:
 - bootstrap workflow
 - update and reconciliation engine
 
-Supported ecosystems for now:
+Target ecosystems for near-term design work:
 
 - Go
 - Python
 - Rust
 
 Do not optimize early for broad ecosystem support.
+
+Current first-party implementation reality:
+
+- one root `Moltarkfile` per repository
+- first-class core primitives live in `moltark/core`
+- current first-party ecosystem modules are `moltark/python` and `astral/uv`
+- generic structured-file reconciliation exists for JSON, TOML, and YAML
+- Go and Rust are important target ecosystems, but they are not yet first-party module families in the repo today
+
+Do not describe the current codebase as if Go and Rust already have the same first-party module depth as Python.
+
+## Start here
+
+If you are new to the codebase, read in this order:
+
+1. [`docs/README.md`](./docs/README.md)
+2. [`docs/concepts/01-core-concepts.md`](./docs/concepts/01-core-concepts.md)
+3. [`docs/concepts/02-modules-and-providers.md`](./docs/concepts/02-modules-and-providers.md)
+4. [`docs/concepts/03-execution-model.md`](./docs/concepts/03-execution-model.md)
+5. [`docs/testing.md`](./docs/testing.md)
+
+Then orient in code with:
+
+- [`internal/moltark/types.go`](./internal/moltark/types.go) for the core IR
+- [`internal/moltark/config.go`](./internal/moltark/config.go) for `Moltarkfile` evaluation
+- [`internal/moltark/modules.go`](./internal/moltark/modules.go) for first-party module loading
+- [`internal/moltark/resolve.go`](./internal/moltark/resolve.go) for provider, fact, and intent resolution
+- [`internal/moltark/plan.go`](./internal/moltark/plan.go) for change classification
+- [`internal/moltark/service.go`](./internal/moltark/service.go) for `plan` / `apply` orchestration
+
+The main mental model is:
+
+- projects define containment and scope
+- components define behavior and ownership
+- facts expose project-scoped truth
+- providers expose capabilities
+- routed intents bind consumers to providers
+- managed files are the concrete reconciliation surface
 
 ## Default stance
 
@@ -140,6 +178,20 @@ This is not just a scaffold tool. It should be able to carry evolving standards 
 
 Testing should be fixture-driven and behavior-oriented.
 
+Primary docs:
+
+- [`docs/testing.md`](./docs/testing.md)
+- [`docs/concepts/01-core-concepts.md`](./docs/concepts/01-core-concepts.md)
+- [`docs/concepts/02-modules-and-providers.md`](./docs/concepts/02-modules-and-providers.md)
+- [`docs/concepts/03-execution-model.md`](./docs/concepts/03-execution-model.md)
+- [`docs/future-paths.md`](./docs/future-paths.md)
+
+Actual test layers in this repo:
+
+- package-level tests under `internal/moltark/` for planner, resolver, structured-file mutation, and state logic
+- integration snapshot tests under `tests/integration/`
+- Gherkin feature tests under `tests/features/`
+
 Prefer:
 
 - input fixture -> operation -> observable outcome
@@ -159,6 +211,33 @@ Core scenarios should cover:
 - user-visible diagnostics
 
 A good test should read like a real repository evolution scenario and fail with obvious artifacts.
+
+Current test framework details:
+
+- integration snapshots use `github.com/gkampitakis/go-snaps`
+- Gherkin scenarios use `github.com/cucumber/godog`
+- package tests use the standard Go `testing` package
+- fixtures live under `tests/fixtures/`
+- integration tests live under `tests/integration/`
+- snapshot files live under `tests/integration/__snapshots__/`
+- feature tests live under `tests/features/`
+
+Current commands:
+
+- full suite: `go test -count=1 ./...`
+- core package tests: `go test -count=1 ./internal/moltark/...`
+- integration only: `go test -count=1 ./tests/integration/...`
+- feature only: `go test -count=1 ./tests/features/...`
+- refresh integration snapshots: `UPDATE_SNAPS=true go test -count=1 ./tests/integration/...`
+
+Use `-count=1` when changing snapshots or CLI behavior to avoid stale test-cache confusion.
+
+When adding behavior:
+
+- prefer package tests for narrow planner / resolver / mutator logic
+- prefer integration snapshots for user-visible CLI and repo-state behavior
+- prefer Gherkin only when the repository evolution story reads better as a scenario than as raw snapshots
+- if the feature changes ownership, provider resolution, facts, or plan/apply semantics, add at least one repository-level scenario
 
 ## Agent checklist
 

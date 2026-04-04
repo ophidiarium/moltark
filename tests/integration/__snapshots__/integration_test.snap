@@ -1,0 +1,4825 @@
+
+[TestBootstrapAndReapply - 1]
+$ moltark init
+exit: 0
+stdout:
+  Created Moltarkfile. Run `moltark plan` to inspect the initial reconciliation.
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 11 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create pyproject.toml
+  set project.name = "demo"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark apply -auto-approve
+exit: 0
+stdout:
+  Plan: 11 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create pyproject.toml
+  set project.name = "demo"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+  Apply complete.
+  wrote pyproject.toml
+  wrote .gitattributes
+  wrote .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 0 to update, 0 drift, 0 conflict, 8 no-op
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to Moltark managed block
+stderr:
+  <empty>
+
+/-/-/-/
+== Moltarkfile ==
+python = use("moltark/python")
+
+root = python.python_project(
+    name = "demo",
+    path = ".",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+== pyproject.toml ==
+[project]
+name = "demo"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "managed_files": [
+    {
+      "path": "pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "owned_path_versions": {
+        "build-system.build-backend": "python/v2",
+        "build-system.requires": "python/v2",
+        "project.name": "python/v2",
+        "project.requires-python": "python/v2",
+        "project.version": "python/v2",
+        "tool.moltark.schema-version": "python/v2",
+        "tool.moltark.template-version": "python/v2"
+      },
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "7bc464d66acaefc90f2f140849ba46be18c5c08e14f0596ff54229f555c25430",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "project_1",
+        "kind": "python_project",
+        "name": "demo",
+        "path": ".",
+        "effective_path": "."
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "version": "python/v2",
+        "target_project_id": "project_1"
+      }
+    ]
+  }
+}
+
+---
+
+[TestPreserveUserManagedDependencies - 1]
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 1 to update, 0 drift, 0 conflict, 9 no-op
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to dependencies (user-managed)
+  no change to Moltark managed block
+  update .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark apply -auto-approve
+exit: 0
+stdout:
+  Plan: 0 to create, 1 to update, 0 drift, 0 conflict, 9 no-op
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to dependencies (user-managed)
+  no change to Moltark managed block
+  update .moltark/state.json
+  Apply complete.
+  wrote .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark doctor
+exit: 0
+stdout:
+  Doctor report:
+  repository is healthy
+  0 create, 0 update, 0 drift, 0 conflict, 9 no-op
+stderr:
+  <empty>
+
+/-/-/-/
+== Moltarkfile ==
+python = use("moltark/python")
+
+python.python_project(
+    name = "demo",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+== pyproject.toml ==
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+dependencies = [
+    "httpx>=0.27.0",
+]
+name = "demo"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "managed_files": [
+    {
+      "path": "pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "owned_path_versions": {
+        "build-system.build-backend": "python/v2",
+        "build-system.requires": "python/v2",
+        "project.name": "python/v2",
+        "project.requires-python": "python/v2",
+        "project.version": "python/v2",
+        "tool.moltark.schema-version": "python/v2",
+        "tool.moltark.template-version": "python/v2"
+      },
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "7bc464d66acaefc90f2f140849ba46be18c5c08e14f0596ff54229f555c25430",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "project_1",
+        "kind": "python_project",
+        "name": "demo",
+        "path": ".",
+        "effective_path": "."
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "version": "python/v2",
+        "target_project_id": "project_1"
+      }
+    ]
+  }
+}
+
+---
+
+[TestDriftDetection - 1]
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 1 to update, 1 drift, 0 conflict, 7 no-op
+  no change to project.name
+  drift detected in project.version: "0.2.0" -> "0.1.0"
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to Moltark managed block
+  update .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark doctor
+exit: 1
+stdout:
+  Doctor report:
+  drift detected in Moltark-owned surfaces
+  0 create, 1 update, 1 drift, 0 conflict, 7 no-op
+stderr:
+  <empty>
+
+/-/-/-/
+== Moltarkfile ==
+python = use("moltark/python")
+
+python.python_project(
+    name = "demo",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+== pyproject.toml ==
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "demo"
+version = "0.2.0"
+requires-python = ">=3.12"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "template_version": "python/v2",
+  "managed_files": [
+    {
+      "path": "pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "7bc464d66acaefc90f2f140849ba46be18c5c08e14f0596ff54229f555c25430",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "project_1",
+        "kind": "python_project",
+        "name": "demo",
+        "path": ".",
+        "effective_path": "."
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "target_project_id": "project_1"
+      }
+    ]
+  }
+}
+
+---
+
+[TestConflictSurfacing - 1]
+$ moltark plan
+exit: 1
+stdout:
+  Plan: 0 to create, 0 to update, 0 drift, 1 conflict, 7 no-op
+  no change to project.name
+  conflict in project.version: actual "0.2.0", desired "0.3.0"
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to Moltark managed block
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark apply -auto-approve
+exit: 1
+stdout:
+  Plan: 0 to create, 0 to update, 0 drift, 1 conflict, 7 no-op
+  no change to project.name
+  conflict in project.version: actual "0.2.0", desired "0.3.0"
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to Moltark managed block
+stderr:
+  Apply aborted due to conflicts.
+
+/-/-/-/
+== Moltarkfile ==
+python = use("moltark/python")
+
+python.python_project(
+    name = "demo",
+    version = "0.3.0",
+    requires_python = ">=3.12",
+)
+
+== pyproject.toml ==
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "demo"
+version = "0.2.0"
+requires-python = ">=3.12"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "template_version": "python/v2",
+  "managed_files": [
+    {
+      "path": "pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "7bc464d66acaefc90f2f140849ba46be18c5c08e14f0596ff54229f555c25430",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "project_1",
+        "kind": "python_project",
+        "name": "demo",
+        "path": ".",
+        "effective_path": "."
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "target_project_id": "project_1"
+      }
+    ]
+  }
+}
+
+---
+
+[TestTemplateVersionUpgrade - 1]
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 2 to update, 0 drift, 0 conflict, 7 no-op
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  update tool.moltark.template-version: "python/v1" -> "python/v2"
+  no change to Moltark managed block
+  update .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark apply -auto-approve
+exit: 0
+stdout:
+  Plan: 0 to create, 2 to update, 0 drift, 0 conflict, 7 no-op
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  update tool.moltark.template-version: "python/v1" -> "python/v2"
+  no change to Moltark managed block
+  update .moltark/state.json
+  Apply complete.
+  wrote pyproject.toml
+  wrote .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 0 to update, 0 drift, 0 conflict, 8 no-op
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to Moltark managed block
+stderr:
+  <empty>
+
+/-/-/-/
+== Moltarkfile ==
+python = use("moltark/python")
+
+python.python_project(
+    name = "demo",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+== pyproject.toml ==
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "demo"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "managed_files": [
+    {
+      "path": "pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "owned_path_versions": {
+        "build-system.build-backend": "python/v2",
+        "build-system.requires": "python/v2",
+        "project.name": "python/v2",
+        "project.requires-python": "python/v2",
+        "project.version": "python/v2",
+        "tool.moltark.schema-version": "python/v2",
+        "tool.moltark.template-version": "python/v2"
+      },
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "7bc464d66acaefc90f2f140849ba46be18c5c08e14f0596ff54229f555c25430",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "project_1",
+        "kind": "python_project",
+        "name": "demo",
+        "path": ".",
+        "effective_path": "."
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "version": "python/v2",
+        "target_project_id": "project_1"
+      }
+    ]
+  }
+}
+
+---
+
+[TestUVWorkspaceWithParentRelativeMembers - 1]
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 28 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create tally/_integrations/intellij-tally/pyproject.toml
+  set project.name = "tally-intellij"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create tally/_integrations/vscode-tally/pyproject.toml
+  set project.name = "tally-vscode"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create tally/pyproject.toml
+  set project.name = "tally"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  set tool.uv.workspace.members = ["_integrations/vscode-tally", "_integrations/intellij-tally"]
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark apply -auto-approve
+exit: 0
+stdout:
+  Plan: 28 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create tally/_integrations/intellij-tally/pyproject.toml
+  set project.name = "tally-intellij"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create tally/_integrations/vscode-tally/pyproject.toml
+  set project.name = "tally-vscode"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create tally/pyproject.toml
+  set project.name = "tally"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  set tool.uv.workspace.members = ["_integrations/vscode-tally", "_integrations/intellij-tally"]
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+  Apply complete.
+  wrote tally/_integrations/intellij-tally/pyproject.toml
+  wrote tally/_integrations/vscode-tally/pyproject.toml
+  wrote tally/pyproject.toml
+  wrote .gitattributes
+  wrote .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 0 to update, 0 drift, 0 conflict, 23 no-op
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to tool.uv.workspace.members
+  no change to Moltark managed block
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark show
+exit: 0
+stdout:
+  {
+    "desired": {
+      "projects": [
+        {
+          "id": "project_1",
+          "kind": "python_project",
+          "name": "tally",
+          "path": "tally",
+          "effective_path": "tally",
+          "python": {
+            "version": "0.1.0",
+            "requires_python": "\u003e=3.12",
+            "template_version": "python/v2",
+            "build_system": {
+              "requires": [
+                "hatchling"
+              ],
+              "backend": "hatchling.build"
+            }
+          }
+        },
+        {
+          "id": "project_2",
+          "kind": "python_project",
+          "name": "tally-vscode",
+          "path": "_integrations/vscode-tally",
+          "effective_path": "tally/_integrations/vscode-tally",
+          "parent_id": "project_1",
+          "python": {
+            "version": "0.1.0",
+            "requires_python": "\u003e=3.12",
+            "template_version": "python/v2",
+            "build_system": {
+              "requires": [
+                "hatchling"
+              ],
+              "backend": "hatchling.build"
+            }
+          }
+        },
+        {
+          "id": "project_3",
+          "kind": "python_project",
+          "name": "tally-intellij",
+          "path": "_integrations/intellij-tally",
+          "effective_path": "tally/_integrations/intellij-tally",
+          "parent_id": "project_1",
+          "python": {
+            "version": "0.1.0",
+            "requires_python": "\u003e=3.12",
+            "template_version": "python/v2",
+            "build_system": {
+              "requires": [
+                "hatchling"
+              ],
+              "backend": "hatchling.build"
+            }
+          }
+        }
+      ],
+      "components": [
+        {
+          "id": "component_1",
+          "kind": "python_project",
+          "module": "moltark/python",
+          "version": "python/v2",
+          "target_project_id": "project_1",
+          "facts": [
+            {
+              "name": "moltark.language.python",
+              "scope_project_id": "project_1",
+              "values": {
+                "package_version": "0.1.0",
+                "requires_python": "\u003e=3.12"
+              }
+            }
+          ],
+          "files": [
+            {
+              "path": "tally/pyproject.toml",
+              "format": "toml",
+              "owned_paths": [
+                "project.name",
+                "project.version",
+                "project.requires-python",
+                "build-system.requires",
+                "build-system.build-backend",
+                "tool.moltark.schema-version",
+                "tool.moltark.template-version"
+              ],
+              "user_managed_paths": [
+                "project.dependencies"
+              ],
+              "desired_values": {
+                "build-system": {
+                  "build-backend": "hatchling.build",
+                  "requires": [
+                    "hatchling"
+                  ]
+                },
+                "project": {
+                  "name": "tally",
+                  "requires-python": "\u003e=3.12",
+                  "version": "0.1.0"
+                },
+                "tool": {
+                  "moltark": {
+                    "schema-version": 1,
+                    "template-version": "python/v2"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_2",
+          "kind": "python_project",
+          "module": "moltark/python",
+          "version": "python/v2",
+          "target_project_id": "project_2",
+          "facts": [
+            {
+              "name": "moltark.language.python",
+              "scope_project_id": "project_2",
+              "values": {
+                "package_version": "0.1.0",
+                "requires_python": "\u003e=3.12"
+              }
+            }
+          ],
+          "files": [
+            {
+              "path": "tally/_integrations/vscode-tally/pyproject.toml",
+              "format": "toml",
+              "owned_paths": [
+                "project.name",
+                "project.version",
+                "project.requires-python",
+                "build-system.requires",
+                "build-system.build-backend",
+                "tool.moltark.schema-version",
+                "tool.moltark.template-version"
+              ],
+              "user_managed_paths": [
+                "project.dependencies"
+              ],
+              "desired_values": {
+                "build-system": {
+                  "build-backend": "hatchling.build",
+                  "requires": [
+                    "hatchling"
+                  ]
+                },
+                "project": {
+                  "name": "tally-vscode",
+                  "requires-python": "\u003e=3.12",
+                  "version": "0.1.0"
+                },
+                "tool": {
+                  "moltark": {
+                    "schema-version": 1,
+                    "template-version": "python/v2"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_3",
+          "kind": "python_project",
+          "module": "moltark/python",
+          "version": "python/v2",
+          "target_project_id": "project_3",
+          "facts": [
+            {
+              "name": "moltark.language.python",
+              "scope_project_id": "project_3",
+              "values": {
+                "package_version": "0.1.0",
+                "requires_python": "\u003e=3.12"
+              }
+            }
+          ],
+          "files": [
+            {
+              "path": "tally/_integrations/intellij-tally/pyproject.toml",
+              "format": "toml",
+              "owned_paths": [
+                "project.name",
+                "project.version",
+                "project.requires-python",
+                "build-system.requires",
+                "build-system.build-backend",
+                "tool.moltark.schema-version",
+                "tool.moltark.template-version"
+              ],
+              "user_managed_paths": [
+                "project.dependencies"
+              ],
+              "desired_values": {
+                "build-system": {
+                  "build-backend": "hatchling.build",
+                  "requires": [
+                    "hatchling"
+                  ]
+                },
+                "project": {
+                  "name": "tally-intellij",
+                  "requires-python": "\u003e=3.12",
+                  "version": "0.1.0"
+                },
+                "tool": {
+                  "moltark": {
+                    "schema-version": 1,
+                    "template-version": "python/v2"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_4",
+          "kind": "uv_workspace",
+          "module": "astral/uv",
+          "version": "astral/uv/v1",
+          "target_project_id": "project_1",
+          "providers": [
+            {
+              "capability": "moltark.python.workspace_manager",
+              "scope_project_id": "project_1",
+              "attributes": {
+                "file_path": "tally/pyproject.toml",
+                "manager": "uv",
+                "owned_path": "tool.uv.workspace.members"
+              }
+            },
+            {
+              "capability": "moltark.python.package_manager",
+              "scope_project_id": "project_1",
+              "attributes": {
+                "dependency_path": "project.dependencies",
+                "ecosystem": "python",
+                "file_path": "tally/pyproject.toml",
+                "manager": "uv"
+              },
+              "lists": {
+                "artifact_kinds": [
+                  "pypi"
+                ]
+              }
+            },
+            {
+              "capability": "moltark.python.package_manager",
+              "scope_project_id": "project_2",
+              "attributes": {
+                "dependency_path": "project.dependencies",
+                "ecosystem": "python",
+                "file_path": "tally/_integrations/vscode-tally/pyproject.toml",
+                "manager": "uv"
+              },
+              "lists": {
+                "artifact_kinds": [
+                  "pypi"
+                ]
+              }
+            },
+            {
+              "capability": "moltark.python.package_manager",
+              "scope_project_id": "project_3",
+              "attributes": {
+                "dependency_path": "project.dependencies",
+                "ecosystem": "python",
+                "file_path": "tally/_integrations/intellij-tally/pyproject.toml",
+                "manager": "uv"
+              },
+              "lists": {
+                "artifact_kinds": [
+                  "pypi"
+                ]
+              }
+            }
+          ],
+          "routed_intents": [
+            {
+              "kind": "workspace_members_request",
+              "capability": "moltark.python.workspace_manager",
+              "target_project_id": "project_1",
+              "lists": {
+                "member_paths": [
+                  "_integrations/vscode-tally",
+                  "_integrations/intellij-tally"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "resolved": {
+      "managed_files": [
+        {
+          "path": "tally/_integrations/intellij-tally/pyproject.toml",
+          "format": "toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version"
+          ],
+          "owned_path_owners": {
+            "build-system.build-backend": "component_3",
+            "build-system.requires": "component_3",
+            "project.name": "component_3",
+            "project.requires-python": "component_3",
+            "project.version": "component_3",
+            "tool.moltark.schema-version": "component_3",
+            "tool.moltark.template-version": "component_3"
+          },
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "user_managed_paths": [
+            "project.dependencies"
+          ],
+          "desired_values": {
+            "build-system": {
+              "build-backend": "hatchling.build",
+              "requires": [
+                "hatchling"
+              ]
+            },
+            "project": {
+              "name": "tally-intellij",
+              "requires-python": "\u003e=3.12",
+              "version": "0.1.0"
+            },
+            "tool": {
+              "moltark": {
+                "schema-version": 1,
+                "template-version": "python/v2"
+              }
+            }
+          },
+          "source_components": [
+            "component_3"
+          ]
+        },
+        {
+          "path": "tally/_integrations/vscode-tally/pyproject.toml",
+          "format": "toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version"
+          ],
+          "owned_path_owners": {
+            "build-system.build-backend": "component_2",
+            "build-system.requires": "component_2",
+            "project.name": "component_2",
+            "project.requires-python": "component_2",
+            "project.version": "component_2",
+            "tool.moltark.schema-version": "component_2",
+            "tool.moltark.template-version": "component_2"
+          },
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "user_managed_paths": [
+            "project.dependencies"
+          ],
+          "desired_values": {
+            "build-system": {
+              "build-backend": "hatchling.build",
+              "requires": [
+                "hatchling"
+              ]
+            },
+            "project": {
+              "name": "tally-vscode",
+              "requires-python": "\u003e=3.12",
+              "version": "0.1.0"
+            },
+            "tool": {
+              "moltark": {
+                "schema-version": 1,
+                "template-version": "python/v2"
+              }
+            }
+          },
+          "source_components": [
+            "component_2"
+          ]
+        },
+        {
+          "path": "tally/pyproject.toml",
+          "format": "toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version",
+            "tool.uv.workspace.members"
+          ],
+          "owned_path_owners": {
+            "build-system.build-backend": "component_1",
+            "build-system.requires": "component_1",
+            "project.name": "component_1",
+            "project.requires-python": "component_1",
+            "project.version": "component_1",
+            "tool.moltark.schema-version": "component_1",
+            "tool.moltark.template-version": "component_1"
+          },
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "user_managed_paths": [
+            "project.dependencies"
+          ],
+          "desired_values": {
+            "build-system": {
+              "build-backend": "hatchling.build",
+              "requires": [
+                "hatchling"
+              ]
+            },
+            "project": {
+              "name": "tally",
+              "requires-python": "\u003e=3.12",
+              "version": "0.1.0"
+            },
+            "tool": {
+              "moltark": {
+                "schema-version": 1,
+                "template-version": "python/v2"
+              },
+              "uv": {
+                "workspace": {
+                  "members": [
+                    "_integrations/vscode-tally",
+                    "_integrations/intellij-tally"
+                  ]
+                }
+              }
+            }
+          },
+          "source_components": [
+            "component_1",
+            "component_4"
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "component_id": "component_1",
+          "name": "moltark.language.python",
+          "scope_project_id": "project_1",
+          "values": {
+            "package_version": "0.1.0",
+            "requires_python": "\u003e=3.12"
+          }
+        },
+        {
+          "component_id": "component_2",
+          "name": "moltark.language.python",
+          "scope_project_id": "project_2",
+          "values": {
+            "package_version": "0.1.0",
+            "requires_python": "\u003e=3.12"
+          }
+        },
+        {
+          "component_id": "component_3",
+          "name": "moltark.language.python",
+          "scope_project_id": "project_3",
+          "values": {
+            "package_version": "0.1.0",
+            "requires_python": "\u003e=3.12"
+          }
+        }
+      ],
+      "providers": [
+        {
+          "component_id": "component_4",
+          "capability": "moltark.python.package_manager",
+          "scope_project_id": "project_1",
+          "attributes": {
+            "dependency_path": "project.dependencies",
+            "ecosystem": "python",
+            "file_path": "tally/pyproject.toml",
+            "manager": "uv"
+          },
+          "lists": {
+            "artifact_kinds": [
+              "pypi"
+            ]
+          }
+        },
+        {
+          "component_id": "component_4",
+          "capability": "moltark.python.package_manager",
+          "scope_project_id": "project_2",
+          "attributes": {
+            "dependency_path": "project.dependencies",
+            "ecosystem": "python",
+            "file_path": "tally/_integrations/vscode-tally/pyproject.toml",
+            "manager": "uv"
+          },
+          "lists": {
+            "artifact_kinds": [
+              "pypi"
+            ]
+          }
+        },
+        {
+          "component_id": "component_4",
+          "capability": "moltark.python.package_manager",
+          "scope_project_id": "project_3",
+          "attributes": {
+            "dependency_path": "project.dependencies",
+            "ecosystem": "python",
+            "file_path": "tally/_integrations/intellij-tally/pyproject.toml",
+            "manager": "uv"
+          },
+          "lists": {
+            "artifact_kinds": [
+              "pypi"
+            ]
+          }
+        },
+        {
+          "component_id": "component_4",
+          "capability": "moltark.python.workspace_manager",
+          "scope_project_id": "project_1",
+          "attributes": {
+            "file_path": "tally/pyproject.toml",
+            "manager": "uv",
+            "owned_path": "tool.uv.workspace.members"
+          }
+        }
+      ],
+      "resolved_intents": [
+        {
+          "component_id": "component_4",
+          "intent_kind": "workspace_members_request",
+          "capability": "moltark.python.workspace_manager",
+          "target_project_id": "project_1",
+          "lists": {
+            "member_paths": [
+              "_integrations/vscode-tally",
+              "_integrations/intellij-tally"
+            ]
+          },
+          "provider_component_id": "component_4",
+          "provider_scope_project_id": "project_1"
+        }
+      ]
+    },
+    "state": {
+      "schema_version": 1,
+      "managed_files": [
+        {
+          "path": "tally/_integrations/intellij-tally/pyproject.toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version"
+          ],
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "fingerprints": {
+            "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+            "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+            "project.name": "116080bfdb3bb0a8d56f6e8c9ff369431701b1efdf4cda731d0740cf80aafdb7",
+            "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+            "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+            "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+            "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+          }
+        },
+        {
+          "path": "tally/_integrations/vscode-tally/pyproject.toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version"
+          ],
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "fingerprints": {
+            "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+            "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+            "project.name": "9351c61fa1b8fdedc69cd224738bea70228b52085c00f43f434ad069e9669b5e",
+            "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+            "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+            "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+            "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+          }
+        },
+        {
+          "path": "tally/pyproject.toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version",
+            "tool.uv.workspace.members"
+          ],
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "fingerprints": {
+            "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+            "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+            "project.name": "8b1be8ffd15bc74dfa04dbc7ffe7334f971f39108346074fe0b3522055370254",
+            "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+            "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+            "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+            "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25",
+            "tool.uv.workspace.members": "342e6387e7eb221f6e4925028d1ae3cb9eeaa26fa1df5257a633e76a762b3fa7"
+          }
+        },
+        {
+          "path": ".gitattributes",
+          "owned_paths": [
+            "moltark.block"
+          ],
+          "fingerprints": {
+            "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+          }
+        }
+      ],
+      "last_applied_model": {
+        "projects": [
+          {
+            "id": "project_1",
+            "kind": "python_project",
+            "name": "tally",
+            "path": "tally",
+            "effective_path": "tally"
+          },
+          {
+            "id": "project_2",
+            "kind": "python_project",
+            "name": "tally-vscode",
+            "path": "_integrations/vscode-tally",
+            "effective_path": "tally/_integrations/vscode-tally",
+            "parent_id": "project_1"
+          },
+          {
+            "id": "project_3",
+            "kind": "python_project",
+            "name": "tally-intellij",
+            "path": "_integrations/intellij-tally",
+            "effective_path": "tally/_integrations/intellij-tally",
+            "parent_id": "project_1"
+          }
+        ],
+        "components": [
+          {
+            "id": "component_1",
+            "kind": "python_project",
+            "module": "moltark/python",
+            "version": "python/v2",
+            "target_project_id": "project_1"
+          },
+          {
+            "id": "component_2",
+            "kind": "python_project",
+            "module": "moltark/python",
+            "version": "python/v2",
+            "target_project_id": "project_2"
+          },
+          {
+            "id": "component_3",
+            "kind": "python_project",
+            "module": "moltark/python",
+            "version": "python/v2",
+            "target_project_id": "project_3"
+          },
+          {
+            "id": "component_4",
+            "kind": "uv_workspace",
+            "module": "astral/uv",
+            "version": "astral/uv/v1",
+            "target_project_id": "project_1"
+          }
+        ]
+      }
+    },
+    "current_owned_values": {
+      ".gitattributes": {
+        "moltark.block": "\"# BEGIN Moltark managed\\n.moltark/** linguist-generated=true\\n# END Moltark managed\""
+      },
+      "tally/_integrations/intellij-tally/pyproject.toml": {
+        "build-system.build-backend": "\"hatchling.build\"",
+        "build-system.requires": "[\"hatchling\"]",
+        "project.name": "\"tally-intellij\"",
+        "project.requires-python": "\"\u003e=3.12\"",
+        "project.version": "\"0.1.0\"",
+        "tool.moltark.schema-version": "1",
+        "tool.moltark.template-version": "\"python/v2\""
+      },
+      "tally/_integrations/vscode-tally/pyproject.toml": {
+        "build-system.build-backend": "\"hatchling.build\"",
+        "build-system.requires": "[\"hatchling\"]",
+        "project.name": "\"tally-vscode\"",
+        "project.requires-python": "\"\u003e=3.12\"",
+        "project.version": "\"0.1.0\"",
+        "tool.moltark.schema-version": "1",
+        "tool.moltark.template-version": "\"python/v2\""
+      },
+      "tally/pyproject.toml": {
+        "build-system.build-backend": "\"hatchling.build\"",
+        "build-system.requires": "[\"hatchling\"]",
+        "project.name": "\"tally\"",
+        "project.requires-python": "\"\u003e=3.12\"",
+        "project.version": "\"0.1.0\"",
+        "tool.moltark.schema-version": "1",
+        "tool.moltark.template-version": "\"python/v2\"",
+        "tool.uv.workspace.members": "[\"_integrations/vscode-tally\", \"_integrations/intellij-tally\"]"
+      }
+    }
+  }
+stderr:
+  <empty>
+
+/-/-/-/
+== Moltarkfile ==
+python = use("moltark/python")
+uv = use("astral/uv")
+
+root = python.python_project(
+    name = "tally",
+    path = "tally",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+vscode = python.python_project(
+    name = "tally-vscode",
+    parent = root,
+    path = "_integrations/vscode-tally",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+intellij = python.python_project(
+    name = "tally-intellij",
+    parent = root,
+    path = "_integrations/intellij-tally",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+uv.uv_workspace(
+    root = root,
+    members = [vscode, intellij],
+)
+
+== tally/_integrations/intellij-tally/pyproject.toml ==
+[project]
+name = "tally-intellij"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+== tally/_integrations/vscode-tally/pyproject.toml ==
+[project]
+name = "tally-vscode"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+== tally/pyproject.toml ==
+[project]
+name = "tally"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+[tool.uv.workspace]
+members = ["_integrations/vscode-tally", "_integrations/intellij-tally"]
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "managed_files": [
+    {
+      "path": "tally/_integrations/intellij-tally/pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "owned_path_versions": {
+        "build-system.build-backend": "python/v2",
+        "build-system.requires": "python/v2",
+        "project.name": "python/v2",
+        "project.requires-python": "python/v2",
+        "project.version": "python/v2",
+        "tool.moltark.schema-version": "python/v2",
+        "tool.moltark.template-version": "python/v2"
+      },
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "116080bfdb3bb0a8d56f6e8c9ff369431701b1efdf4cda731d0740cf80aafdb7",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": "tally/_integrations/vscode-tally/pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "owned_path_versions": {
+        "build-system.build-backend": "python/v2",
+        "build-system.requires": "python/v2",
+        "project.name": "python/v2",
+        "project.requires-python": "python/v2",
+        "project.version": "python/v2",
+        "tool.moltark.schema-version": "python/v2",
+        "tool.moltark.template-version": "python/v2"
+      },
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "9351c61fa1b8fdedc69cd224738bea70228b52085c00f43f434ad069e9669b5e",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": "tally/pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version",
+        "tool.uv.workspace.members"
+      ],
+      "owned_path_versions": {
+        "build-system.build-backend": "python/v2",
+        "build-system.requires": "python/v2",
+        "project.name": "python/v2",
+        "project.requires-python": "python/v2",
+        "project.version": "python/v2",
+        "tool.moltark.schema-version": "python/v2",
+        "tool.moltark.template-version": "python/v2"
+      },
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "8b1be8ffd15bc74dfa04dbc7ffe7334f971f39108346074fe0b3522055370254",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25",
+        "tool.uv.workspace.members": "342e6387e7eb221f6e4925028d1ae3cb9eeaa26fa1df5257a633e76a762b3fa7"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "project_1",
+        "kind": "python_project",
+        "name": "tally",
+        "path": "tally",
+        "effective_path": "tally"
+      },
+      {
+        "id": "project_2",
+        "kind": "python_project",
+        "name": "tally-vscode",
+        "path": "_integrations/vscode-tally",
+        "effective_path": "tally/_integrations/vscode-tally",
+        "parent_id": "project_1"
+      },
+      {
+        "id": "project_3",
+        "kind": "python_project",
+        "name": "tally-intellij",
+        "path": "_integrations/intellij-tally",
+        "effective_path": "tally/_integrations/intellij-tally",
+        "parent_id": "project_1"
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "version": "python/v2",
+        "target_project_id": "project_1"
+      },
+      {
+        "id": "component_2",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "version": "python/v2",
+        "target_project_id": "project_2"
+      },
+      {
+        "id": "component_3",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "version": "python/v2",
+        "target_project_id": "project_3"
+      },
+      {
+        "id": "component_4",
+        "kind": "uv_workspace",
+        "module": "astral/uv",
+        "version": "astral/uv/v1",
+        "target_project_id": "project_1"
+      }
+    ]
+  }
+}
+
+---
+
+[TestCoreTasksAndTriggerBindings - 1]
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 20 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create packages/worker/pyproject.toml
+  set project.name = "demo-worker"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create pyproject.toml
+  set project.name = "demo"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  set tool.uv.workspace.members = ["packages/worker"]
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark apply -auto-approve
+exit: 0
+stdout:
+  Plan: 20 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create packages/worker/pyproject.toml
+  set project.name = "demo-worker"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create pyproject.toml
+  set project.name = "demo"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  set tool.uv.workspace.members = ["packages/worker"]
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+  Apply complete.
+  wrote packages/worker/pyproject.toml
+  wrote pyproject.toml
+  wrote .gitattributes
+  wrote .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 0 to update, 0 drift, 0 conflict, 16 no-op
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to tool.uv.workspace.members
+  no change to Moltark managed block
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark show
+exit: 0
+stdout:
+  {
+    "desired": {
+      "projects": [
+        {
+          "id": "project_1",
+          "kind": "python_project",
+          "name": "demo",
+          "path": ".",
+          "effective_path": ".",
+          "python": {
+            "version": "0.1.0",
+            "requires_python": "\u003e=3.12",
+            "template_version": "python/v2",
+            "build_system": {
+              "requires": [
+                "hatchling"
+              ],
+              "backend": "hatchling.build"
+            }
+          }
+        },
+        {
+          "id": "project_2",
+          "kind": "python_project",
+          "name": "demo-worker",
+          "path": "packages/worker",
+          "effective_path": "packages/worker",
+          "parent_id": "project_1",
+          "python": {
+            "version": "0.1.0",
+            "requires_python": "\u003e=3.12",
+            "template_version": "python/v2",
+            "build_system": {
+              "requires": [
+                "hatchling"
+              ],
+              "backend": "hatchling.build"
+            }
+          }
+        }
+      ],
+      "components": [
+        {
+          "id": "component_1",
+          "kind": "python_project",
+          "module": "moltark/python",
+          "version": "python/v2",
+          "target_project_id": "project_1",
+          "facts": [
+            {
+              "name": "moltark.language.python",
+              "scope_project_id": "project_1",
+              "values": {
+                "package_version": "0.1.0",
+                "requires_python": "\u003e=3.12"
+              }
+            }
+          ],
+          "files": [
+            {
+              "path": "pyproject.toml",
+              "format": "toml",
+              "owned_paths": [
+                "project.name",
+                "project.version",
+                "project.requires-python",
+                "build-system.requires",
+                "build-system.build-backend",
+                "tool.moltark.schema-version",
+                "tool.moltark.template-version"
+              ],
+              "user_managed_paths": [
+                "project.dependencies"
+              ],
+              "desired_values": {
+                "build-system": {
+                  "build-backend": "hatchling.build",
+                  "requires": [
+                    "hatchling"
+                  ]
+                },
+                "project": {
+                  "name": "demo",
+                  "requires-python": "\u003e=3.12",
+                  "version": "0.1.0"
+                },
+                "tool": {
+                  "moltark": {
+                    "schema-version": 1,
+                    "template-version": "python/v2"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_2",
+          "kind": "python_project",
+          "module": "moltark/python",
+          "version": "python/v2",
+          "target_project_id": "project_2",
+          "facts": [
+            {
+              "name": "moltark.language.python",
+              "scope_project_id": "project_2",
+              "values": {
+                "package_version": "0.1.0",
+                "requires_python": "\u003e=3.12"
+              }
+            }
+          ],
+          "files": [
+            {
+              "path": "packages/worker/pyproject.toml",
+              "format": "toml",
+              "owned_paths": [
+                "project.name",
+                "project.version",
+                "project.requires-python",
+                "build-system.requires",
+                "build-system.build-backend",
+                "tool.moltark.schema-version",
+                "tool.moltark.template-version"
+              ],
+              "user_managed_paths": [
+                "project.dependencies"
+              ],
+              "desired_values": {
+                "build-system": {
+                  "build-backend": "hatchling.build",
+                  "requires": [
+                    "hatchling"
+                  ]
+                },
+                "project": {
+                  "name": "demo-worker",
+                  "requires-python": "\u003e=3.12",
+                  "version": "0.1.0"
+                },
+                "tool": {
+                  "moltark": {
+                    "schema-version": 1,
+                    "template-version": "python/v2"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_3",
+          "kind": "uv_workspace",
+          "module": "astral/uv",
+          "version": "astral/uv/v1",
+          "target_project_id": "project_1",
+          "providers": [
+            {
+              "capability": "moltark.python.workspace_manager",
+              "scope_project_id": "project_1",
+              "attributes": {
+                "file_path": "pyproject.toml",
+                "manager": "uv",
+                "owned_path": "tool.uv.workspace.members"
+              }
+            },
+            {
+              "capability": "moltark.python.package_manager",
+              "scope_project_id": "project_1",
+              "attributes": {
+                "dependency_path": "project.dependencies",
+                "ecosystem": "python",
+                "file_path": "pyproject.toml",
+                "manager": "uv"
+              },
+              "lists": {
+                "artifact_kinds": [
+                  "pypi"
+                ]
+              }
+            },
+            {
+              "capability": "moltark.python.package_manager",
+              "scope_project_id": "project_2",
+              "attributes": {
+                "dependency_path": "project.dependencies",
+                "ecosystem": "python",
+                "file_path": "packages/worker/pyproject.toml",
+                "manager": "uv"
+              },
+              "lists": {
+                "artifact_kinds": [
+                  "pypi"
+                ]
+              }
+            }
+          ],
+          "routed_intents": [
+            {
+              "kind": "workspace_members_request",
+              "capability": "moltark.python.workspace_manager",
+              "target_project_id": "project_1",
+              "lists": {
+                "member_paths": [
+                  "packages/worker"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_4",
+          "kind": "synthesis_hook",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "project_1",
+          "synthesis_hooks": [
+            {
+              "phase": "post_synthesize",
+              "target_project_id": "project_1",
+              "description": "validate resolved task graph"
+            }
+          ]
+        },
+        {
+          "id": "component_5",
+          "kind": "bootstrap_requirement",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "project_2",
+          "bootstrap_requirements": [
+            {
+              "tool": "uv",
+              "target_project_id": "project_2",
+              "purpose": "python workspace bootstrap",
+              "strategies": [
+                "official-installer",
+                "pipx"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "component_6",
+          "kind": "python_dependency",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "project_2",
+          "routed_intents": [
+            {
+              "kind": "python_dependency_request",
+              "capability": "moltark.python.package_manager",
+              "target_project_id": "project_2",
+              "attributes": {
+                "requirement": "httpx\u003e=0.28"
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_7",
+          "kind": "task",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "project_2",
+          "tasks": [
+            {
+              "name": "test",
+              "target_project_id": "project_2",
+              "command": [
+                "pytest",
+                "-q"
+              ],
+              "runtime": "python",
+              "tags": [
+                "test",
+                "python"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "component_8",
+          "kind": "task",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "project_2",
+          "tasks": [
+            {
+              "name": "lint",
+              "target_project_id": "project_2",
+              "command": [
+                "ruff",
+                "check",
+                "."
+              ],
+              "runtime": "python",
+              "tags": [
+                "lint",
+                "python"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "component_9",
+          "kind": "task_surface",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "project_2",
+          "task_surfaces": [
+            {
+              "name": "uv",
+              "kind": "package_scripts",
+              "target_project_id": "project_2"
+            }
+          ]
+        },
+        {
+          "id": "component_10",
+          "kind": "trigger_binding",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "project_1",
+          "trigger_bindings": [
+            {
+              "trigger": "pre-push",
+              "target_project_id": "project_1",
+              "match_tags": [
+                "test"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "component_11",
+          "kind": "trigger_binding",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "project_1",
+          "trigger_bindings": [
+            {
+              "trigger": "ci",
+              "target_project_id": "project_1",
+              "match_names": [
+                "lint"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "resolved": {
+      "managed_files": [
+        {
+          "path": "packages/worker/pyproject.toml",
+          "format": "toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version"
+          ],
+          "owned_path_owners": {
+            "build-system.build-backend": "component_2",
+            "build-system.requires": "component_2",
+            "project.name": "component_2",
+            "project.requires-python": "component_2",
+            "project.version": "component_2",
+            "tool.moltark.schema-version": "component_2",
+            "tool.moltark.template-version": "component_2"
+          },
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "user_managed_paths": [
+            "project.dependencies"
+          ],
+          "desired_values": {
+            "build-system": {
+              "build-backend": "hatchling.build",
+              "requires": [
+                "hatchling"
+              ]
+            },
+            "project": {
+              "name": "demo-worker",
+              "requires-python": "\u003e=3.12",
+              "version": "0.1.0"
+            },
+            "tool": {
+              "moltark": {
+                "schema-version": 1,
+                "template-version": "python/v2"
+              }
+            }
+          },
+          "source_components": [
+            "component_2"
+          ]
+        },
+        {
+          "path": "pyproject.toml",
+          "format": "toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version",
+            "tool.uv.workspace.members"
+          ],
+          "owned_path_owners": {
+            "build-system.build-backend": "component_1",
+            "build-system.requires": "component_1",
+            "project.name": "component_1",
+            "project.requires-python": "component_1",
+            "project.version": "component_1",
+            "tool.moltark.schema-version": "component_1",
+            "tool.moltark.template-version": "component_1"
+          },
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "user_managed_paths": [
+            "project.dependencies"
+          ],
+          "desired_values": {
+            "build-system": {
+              "build-backend": "hatchling.build",
+              "requires": [
+                "hatchling"
+              ]
+            },
+            "project": {
+              "name": "demo",
+              "requires-python": "\u003e=3.12",
+              "version": "0.1.0"
+            },
+            "tool": {
+              "moltark": {
+                "schema-version": 1,
+                "template-version": "python/v2"
+              },
+              "uv": {
+                "workspace": {
+                  "members": [
+                    "packages/worker"
+                  ]
+                }
+              }
+            }
+          },
+          "source_components": [
+            "component_1",
+            "component_3"
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "component_id": "component_1",
+          "name": "moltark.language.python",
+          "scope_project_id": "project_1",
+          "values": {
+            "package_version": "0.1.0",
+            "requires_python": "\u003e=3.12"
+          }
+        },
+        {
+          "component_id": "component_2",
+          "name": "moltark.language.python",
+          "scope_project_id": "project_2",
+          "values": {
+            "package_version": "0.1.0",
+            "requires_python": "\u003e=3.12"
+          }
+        }
+      ],
+      "providers": [
+        {
+          "component_id": "component_3",
+          "capability": "moltark.python.package_manager",
+          "scope_project_id": "project_1",
+          "attributes": {
+            "dependency_path": "project.dependencies",
+            "ecosystem": "python",
+            "file_path": "pyproject.toml",
+            "manager": "uv"
+          },
+          "lists": {
+            "artifact_kinds": [
+              "pypi"
+            ]
+          }
+        },
+        {
+          "component_id": "component_3",
+          "capability": "moltark.python.package_manager",
+          "scope_project_id": "project_2",
+          "attributes": {
+            "dependency_path": "project.dependencies",
+            "ecosystem": "python",
+            "file_path": "packages/worker/pyproject.toml",
+            "manager": "uv"
+          },
+          "lists": {
+            "artifact_kinds": [
+              "pypi"
+            ]
+          }
+        },
+        {
+          "component_id": "component_3",
+          "capability": "moltark.python.workspace_manager",
+          "scope_project_id": "project_1",
+          "attributes": {
+            "file_path": "pyproject.toml",
+            "manager": "uv",
+            "owned_path": "tool.uv.workspace.members"
+          }
+        }
+      ],
+      "synthesis_hooks": [
+        {
+          "component_id": "component_4",
+          "phase": "post_synthesize",
+          "target_project_id": "project_1",
+          "target_project_path": ".",
+          "description": "validate resolved task graph"
+        }
+      ],
+      "bootstrap_requirements": [
+        {
+          "component_id": "component_5",
+          "tool": "uv",
+          "target_project_id": "project_2",
+          "target_project_path": "packages/worker",
+          "purpose": "python workspace bootstrap",
+          "strategies": [
+            "official-installer",
+            "pipx"
+          ]
+        }
+      ],
+      "tasks": [
+        {
+          "component_id": "component_8",
+          "name": "lint",
+          "target_project_id": "project_2",
+          "target_project_path": "packages/worker",
+          "command": [
+            "ruff",
+            "check",
+            "."
+          ],
+          "runtime": "python",
+          "tags": [
+            "lint",
+            "python"
+          ]
+        },
+        {
+          "component_id": "component_7",
+          "name": "test",
+          "target_project_id": "project_2",
+          "target_project_path": "packages/worker",
+          "command": [
+            "pytest",
+            "-q"
+          ],
+          "runtime": "python",
+          "tags": [
+            "test",
+            "python"
+          ]
+        }
+      ],
+      "task_surfaces": [
+        {
+          "component_id": "component_9",
+          "name": "uv",
+          "kind": "package_scripts",
+          "target_project_id": "project_2",
+          "target_project_path": "packages/worker"
+        }
+      ],
+      "resolved_trigger_bindings": [
+        {
+          "component_id": "component_11",
+          "trigger": "ci",
+          "target_project_id": "project_1",
+          "target_project_path": ".",
+          "match_names": [
+            "lint"
+          ],
+          "task_component_id": "component_8",
+          "task_name": "lint",
+          "task_target_project_id": "project_2",
+          "task_target_project_path": "packages/worker"
+        },
+        {
+          "component_id": "component_10",
+          "trigger": "pre-push",
+          "target_project_id": "project_1",
+          "target_project_path": ".",
+          "match_tags": [
+            "test"
+          ],
+          "task_component_id": "component_7",
+          "task_name": "test",
+          "task_target_project_id": "project_2",
+          "task_target_project_path": "packages/worker"
+        }
+      ],
+      "resolved_intents": [
+        {
+          "component_id": "component_3",
+          "intent_kind": "workspace_members_request",
+          "capability": "moltark.python.workspace_manager",
+          "target_project_id": "project_1",
+          "lists": {
+            "member_paths": [
+              "packages/worker"
+            ]
+          },
+          "provider_component_id": "component_3",
+          "provider_scope_project_id": "project_1"
+        },
+        {
+          "component_id": "component_6",
+          "intent_kind": "python_dependency_request",
+          "capability": "moltark.python.package_manager",
+          "target_project_id": "project_2",
+          "attributes": {
+            "requirement": "httpx\u003e=0.28"
+          },
+          "provider_component_id": "component_3",
+          "provider_scope_project_id": "project_2"
+        }
+      ]
+    },
+    "state": {
+      "schema_version": 1,
+      "managed_files": [
+        {
+          "path": "packages/worker/pyproject.toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version"
+          ],
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "fingerprints": {
+            "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+            "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+            "project.name": "91fdd12a913750e308c11bb8202cbdd97336eb6f5479fb8c133a5bf77bd44579",
+            "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+            "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+            "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+            "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+          }
+        },
+        {
+          "path": "pyproject.toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version",
+            "tool.uv.workspace.members"
+          ],
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "fingerprints": {
+            "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+            "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+            "project.name": "7bc464d66acaefc90f2f140849ba46be18c5c08e14f0596ff54229f555c25430",
+            "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+            "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+            "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+            "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25",
+            "tool.uv.workspace.members": "4bc0dc9c20be18e07ed75a7737eba07694cd4d3fcf28d8cf7f889b2bbaa532bb"
+          }
+        },
+        {
+          "path": ".gitattributes",
+          "owned_paths": [
+            "moltark.block"
+          ],
+          "fingerprints": {
+            "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+          }
+        }
+      ],
+      "last_applied_model": {
+        "projects": [
+          {
+            "id": "project_1",
+            "kind": "python_project",
+            "name": "demo",
+            "path": ".",
+            "effective_path": "."
+          },
+          {
+            "id": "project_2",
+            "kind": "python_project",
+            "name": "demo-worker",
+            "path": "packages/worker",
+            "effective_path": "packages/worker",
+            "parent_id": "project_1"
+          }
+        ],
+        "components": [
+          {
+            "id": "component_1",
+            "kind": "python_project",
+            "module": "moltark/python",
+            "version": "python/v2",
+            "target_project_id": "project_1"
+          },
+          {
+            "id": "component_2",
+            "kind": "python_project",
+            "module": "moltark/python",
+            "version": "python/v2",
+            "target_project_id": "project_2"
+          },
+          {
+            "id": "component_3",
+            "kind": "uv_workspace",
+            "module": "astral/uv",
+            "version": "astral/uv/v1",
+            "target_project_id": "project_1"
+          },
+          {
+            "id": "component_4",
+            "kind": "synthesis_hook",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "project_1"
+          },
+          {
+            "id": "component_5",
+            "kind": "bootstrap_requirement",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "project_2"
+          },
+          {
+            "id": "component_6",
+            "kind": "python_dependency",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "project_2"
+          },
+          {
+            "id": "component_7",
+            "kind": "task",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "project_2"
+          },
+          {
+            "id": "component_8",
+            "kind": "task",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "project_2"
+          },
+          {
+            "id": "component_9",
+            "kind": "task_surface",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "project_2"
+          },
+          {
+            "id": "component_10",
+            "kind": "trigger_binding",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "project_1"
+          },
+          {
+            "id": "component_11",
+            "kind": "trigger_binding",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "project_1"
+          }
+        ]
+      }
+    },
+    "current_owned_values": {
+      ".gitattributes": {
+        "moltark.block": "\"# BEGIN Moltark managed\\n.moltark/** linguist-generated=true\\n# END Moltark managed\""
+      },
+      "packages/worker/pyproject.toml": {
+        "build-system.build-backend": "\"hatchling.build\"",
+        "build-system.requires": "[\"hatchling\"]",
+        "project.name": "\"demo-worker\"",
+        "project.requires-python": "\"\u003e=3.12\"",
+        "project.version": "\"0.1.0\"",
+        "tool.moltark.schema-version": "1",
+        "tool.moltark.template-version": "\"python/v2\""
+      },
+      "pyproject.toml": {
+        "build-system.build-backend": "\"hatchling.build\"",
+        "build-system.requires": "[\"hatchling\"]",
+        "project.name": "\"demo\"",
+        "project.requires-python": "\"\u003e=3.12\"",
+        "project.version": "\"0.1.0\"",
+        "tool.moltark.schema-version": "1",
+        "tool.moltark.template-version": "\"python/v2\"",
+        "tool.uv.workspace.members": "[\"packages/worker\"]"
+      }
+    }
+  }
+stderr:
+  <empty>
+
+/-/-/-/
+== Moltarkfile ==
+python = use("moltark/python")
+uv = use("astral/uv")
+core = use("moltark/core")
+
+root = python.python_project(
+    name = "demo",
+    path = ".",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+worker = python.python_project(
+    name = "demo-worker",
+    parent = root,
+    path = "packages/worker",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+uv.uv_workspace(
+    root = root,
+    members = [worker],
+)
+
+core.synthesis_hook(
+    phase = "post_synthesize",
+    target = root,
+    description = "validate resolved task graph",
+)
+
+core.bootstrap_requirement(
+    tool = "uv",
+    target = worker,
+    purpose = "python workspace bootstrap",
+    strategies = ["official-installer", "pipx"],
+)
+
+core.python_dependency(
+    target = worker,
+    requirement = "httpx>=0.28",
+)
+
+core.task(
+    name = "test",
+    target = worker,
+    command = ["pytest", "-q"],
+    runtime = "python",
+    tags = ["test", "python"],
+)
+
+core.task(
+    name = "lint",
+    target = worker,
+    command = ["ruff", "check", "."],
+    runtime = "python",
+    tags = ["lint", "python"],
+)
+
+core.task_surface(
+    kind = "package_scripts",
+    name = "uv",
+    target = worker,
+)
+
+core.trigger_binding(
+    trigger = "pre-push",
+    target = root,
+    match_tags = ["test"],
+)
+
+core.trigger_binding(
+    trigger = "ci",
+    target = root,
+    match_names = ["lint"],
+)
+
+== packages/worker/pyproject.toml ==
+[project]
+name = "demo-worker"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+== pyproject.toml ==
+[project]
+name = "demo"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+[tool.uv.workspace]
+members = ["packages/worker"]
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "managed_files": [
+    {
+      "path": "packages/worker/pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "owned_path_versions": {
+        "build-system.build-backend": "python/v2",
+        "build-system.requires": "python/v2",
+        "project.name": "python/v2",
+        "project.requires-python": "python/v2",
+        "project.version": "python/v2",
+        "tool.moltark.schema-version": "python/v2",
+        "tool.moltark.template-version": "python/v2"
+      },
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "91fdd12a913750e308c11bb8202cbdd97336eb6f5479fb8c133a5bf77bd44579",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": "pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version",
+        "tool.uv.workspace.members"
+      ],
+      "owned_path_versions": {
+        "build-system.build-backend": "python/v2",
+        "build-system.requires": "python/v2",
+        "project.name": "python/v2",
+        "project.requires-python": "python/v2",
+        "project.version": "python/v2",
+        "tool.moltark.schema-version": "python/v2",
+        "tool.moltark.template-version": "python/v2"
+      },
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "7bc464d66acaefc90f2f140849ba46be18c5c08e14f0596ff54229f555c25430",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25",
+        "tool.uv.workspace.members": "4bc0dc9c20be18e07ed75a7737eba07694cd4d3fcf28d8cf7f889b2bbaa532bb"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "project_1",
+        "kind": "python_project",
+        "name": "demo",
+        "path": ".",
+        "effective_path": "."
+      },
+      {
+        "id": "project_2",
+        "kind": "python_project",
+        "name": "demo-worker",
+        "path": "packages/worker",
+        "effective_path": "packages/worker",
+        "parent_id": "project_1"
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "version": "python/v2",
+        "target_project_id": "project_1"
+      },
+      {
+        "id": "component_2",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "version": "python/v2",
+        "target_project_id": "project_2"
+      },
+      {
+        "id": "component_3",
+        "kind": "uv_workspace",
+        "module": "astral/uv",
+        "version": "astral/uv/v1",
+        "target_project_id": "project_1"
+      },
+      {
+        "id": "component_4",
+        "kind": "synthesis_hook",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "project_1"
+      },
+      {
+        "id": "component_5",
+        "kind": "bootstrap_requirement",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "project_2"
+      },
+      {
+        "id": "component_6",
+        "kind": "python_dependency",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "project_2"
+      },
+      {
+        "id": "component_7",
+        "kind": "task",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "project_2"
+      },
+      {
+        "id": "component_8",
+        "kind": "task",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "project_2"
+      },
+      {
+        "id": "component_9",
+        "kind": "task_surface",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "project_2"
+      },
+      {
+        "id": "component_10",
+        "kind": "trigger_binding",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "project_1"
+      },
+      {
+        "id": "component_11",
+        "kind": "trigger_binding",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "project_1"
+      }
+    ]
+  }
+}
+
+---
+
+[TestGoLintVscodeComponentOnly - 1]
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 12 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create .golangci.toml
+  set run.go = "1.24"
+  create .vscode/extensions.json
+  set /recommendations = ["golang.Go"]
+  create .vscode/settings.json
+  set /editor.codeActionsOnSave/source.fixAll = "explicit"
+  set /go.formatTool = "gofumpt"
+  set /go.lintOnSave = "package"
+  set /go.lintTool = "golangci-lint"
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark apply -auto-approve
+exit: 0
+stdout:
+  Plan: 12 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create .golangci.toml
+  set run.go = "1.24"
+  create .vscode/extensions.json
+  set /recommendations = ["golang.Go"]
+  create .vscode/settings.json
+  set /editor.codeActionsOnSave/source.fixAll = "explicit"
+  set /go.formatTool = "gofumpt"
+  set /go.lintOnSave = "package"
+  set /go.lintTool = "golangci-lint"
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+  Apply complete.
+  wrote .golangci.toml
+  wrote .vscode/extensions.json
+  wrote .vscode/settings.json
+  wrote .gitattributes
+  wrote .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 0 to update, 0 drift, 0 conflict, 7 no-op
+  no change to run.go
+  no change to /recommendations
+  no change to /editor.codeActionsOnSave/source.fixAll
+  no change to /go.formatTool
+  no change to /go.lintOnSave
+  no change to /go.lintTool
+  no change to Moltark managed block
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark show
+exit: 0
+stdout:
+  {
+    "desired": {
+      "projects": [
+        {
+          "id": "app",
+          "kind": "go_project",
+          "name": "app",
+          "path": ".",
+          "effective_path": ".",
+          "attributes": {
+            "go_version": "1.24"
+          }
+        }
+      ],
+      "components": [
+        {
+          "id": "component_1",
+          "kind": "fact",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "app",
+          "facts": [
+            {
+              "name": "moltark.language.go",
+              "scope_project_id": "app",
+              "values": {
+                "version": "1.24"
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_2",
+          "kind": "json_file",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "app",
+          "files": [
+            {
+              "path": ".vscode/settings.json",
+              "format": "json",
+              "owned_paths": [
+                "/editor.codeActionsOnSave/source.fixAll",
+                "/go.formatTool",
+                "/go.lintOnSave",
+                "/go.lintTool"
+              ],
+              "desired_values": {
+                "editor.codeActionsOnSave": {
+                  "source.fixAll": "explicit"
+                },
+                "go.formatTool": "gofumpt",
+                "go.lintOnSave": "package",
+                "go.lintTool": "golangci-lint"
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_3",
+          "kind": "json_file",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "app",
+          "files": [
+            {
+              "path": ".vscode/extensions.json",
+              "format": "json",
+              "owned_paths": [
+                "/recommendations"
+              ],
+              "desired_values": {
+                "recommendations": [
+                  "golang.Go"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_4",
+          "kind": "toml_file",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "app",
+          "files": [
+            {
+              "path": ".golangci.toml",
+              "format": "toml",
+              "owned_paths": [
+                "run.go"
+              ],
+              "desired_values": {
+                "run": {
+                  "go": {
+                    "target_project_id": "app",
+                    "name": "moltark.language.go",
+                    "path": "version"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_5",
+          "kind": "bootstrap_requirement",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "app",
+          "bootstrap_requirements": [
+            {
+              "tool": "golangci-lint",
+              "target_project_id": "app",
+              "purpose": "Go linting",
+              "strategies": [
+                "brew",
+                "mise"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "component_6",
+          "kind": "task",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "app",
+          "tasks": [
+            {
+              "name": "lint",
+              "target_project_id": "app",
+              "command": [
+                "golangci-lint",
+                "run",
+                "./..."
+              ],
+              "runtime": "go",
+              "tags": [
+                "lint",
+                "go"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "component_7",
+          "kind": "trigger_binding",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "app",
+          "trigger_bindings": [
+            {
+              "trigger": "pre-commit",
+              "target_project_id": "app",
+              "match_names": [
+                "lint"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "resolved": {
+      "managed_files": [
+        {
+          "path": ".golangci.toml",
+          "format": "toml",
+          "owned_paths": [
+            "run.go"
+          ],
+          "owned_path_owners": {
+            "run.go": "component_4"
+          },
+          "owned_path_versions": {
+            "run.go": "core/v1"
+          },
+          "desired_values": {
+            "run": {
+              "go": "1.24"
+            }
+          },
+          "source_components": [
+            "component_4"
+          ]
+        },
+        {
+          "path": ".vscode/extensions.json",
+          "format": "json",
+          "owned_paths": [
+            "/recommendations"
+          ],
+          "owned_path_owners": {
+            "/recommendations": "component_3"
+          },
+          "owned_path_versions": {
+            "/recommendations": "core/v1"
+          },
+          "desired_values": {
+            "recommendations": [
+              "golang.Go"
+            ]
+          },
+          "source_components": [
+            "component_3"
+          ]
+        },
+        {
+          "path": ".vscode/settings.json",
+          "format": "json",
+          "owned_paths": [
+            "/editor.codeActionsOnSave/source.fixAll",
+            "/go.formatTool",
+            "/go.lintOnSave",
+            "/go.lintTool"
+          ],
+          "owned_path_owners": {
+            "/editor.codeActionsOnSave/source.fixAll": "component_2",
+            "/go.formatTool": "component_2",
+            "/go.lintOnSave": "component_2",
+            "/go.lintTool": "component_2"
+          },
+          "owned_path_versions": {
+            "/editor.codeActionsOnSave/source.fixAll": "core/v1",
+            "/go.formatTool": "core/v1",
+            "/go.lintOnSave": "core/v1",
+            "/go.lintTool": "core/v1"
+          },
+          "desired_values": {
+            "editor.codeActionsOnSave": {
+              "source.fixAll": "explicit"
+            },
+            "go.formatTool": "gofumpt",
+            "go.lintOnSave": "package",
+            "go.lintTool": "golangci-lint"
+          },
+          "source_components": [
+            "component_2"
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "component_id": "component_1",
+          "name": "moltark.language.go",
+          "scope_project_id": "app",
+          "values": {
+            "version": "1.24"
+          }
+        }
+      ],
+      "providers": [],
+      "bootstrap_requirements": [
+        {
+          "component_id": "component_5",
+          "tool": "golangci-lint",
+          "target_project_id": "app",
+          "target_project_path": ".",
+          "purpose": "Go linting",
+          "strategies": [
+            "brew",
+            "mise"
+          ]
+        }
+      ],
+      "tasks": [
+        {
+          "component_id": "component_6",
+          "name": "lint",
+          "target_project_id": "app",
+          "target_project_path": ".",
+          "command": [
+            "golangci-lint",
+            "run",
+            "./..."
+          ],
+          "runtime": "go",
+          "tags": [
+            "lint",
+            "go"
+          ]
+        }
+      ],
+      "resolved_trigger_bindings": [
+        {
+          "component_id": "component_7",
+          "trigger": "pre-commit",
+          "target_project_id": "app",
+          "target_project_path": ".",
+          "match_names": [
+            "lint"
+          ],
+          "task_component_id": "component_6",
+          "task_name": "lint",
+          "task_target_project_id": "app",
+          "task_target_project_path": "."
+        }
+      ],
+      "resolved_intents": []
+    },
+    "state": {
+      "schema_version": 1,
+      "managed_files": [
+        {
+          "path": ".golangci.toml",
+          "owned_paths": [
+            "run.go"
+          ],
+          "owned_path_versions": {
+            "run.go": "core/v1"
+          },
+          "fingerprints": {
+            "run.go": "01f6e30562dc810118d3b8c35f1674ff5c6b2f2c033a4bcb134aaa94d6f6c2cb"
+          }
+        },
+        {
+          "path": ".vscode/extensions.json",
+          "owned_paths": [
+            "/recommendations"
+          ],
+          "owned_path_versions": {
+            "/recommendations": "core/v1"
+          },
+          "fingerprints": {
+            "/recommendations": "3ccff0cf85d90dcb87d86faf9516c49bc96160ea646784c0048c195b9f07f12e"
+          }
+        },
+        {
+          "path": ".vscode/settings.json",
+          "owned_paths": [
+            "/editor.codeActionsOnSave/source.fixAll",
+            "/go.formatTool",
+            "/go.lintOnSave",
+            "/go.lintTool"
+          ],
+          "owned_path_versions": {
+            "/editor.codeActionsOnSave/source.fixAll": "core/v1",
+            "/go.formatTool": "core/v1",
+            "/go.lintOnSave": "core/v1",
+            "/go.lintTool": "core/v1"
+          },
+          "fingerprints": {
+            "/editor.codeActionsOnSave/source.fixAll": "283bf832ef3ec4894c7872546a9805c38081b661992c5fbb557530368f8214ad",
+            "/go.formatTool": "b6621d09a7d624e492650d46cae4b2946b9f63c03d9c337d292069c278f73b12",
+            "/go.lintOnSave": "b2c19c2870165d8e08384acc1c080de2d811fe6e625c6558defc98802a3287d2",
+            "/go.lintTool": "acbc4079826290285879e0767b8dfc7654f482081fccf719e9439d06c8136cc8"
+          }
+        },
+        {
+          "path": ".gitattributes",
+          "owned_paths": [
+            "moltark.block"
+          ],
+          "fingerprints": {
+            "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+          }
+        }
+      ],
+      "last_applied_model": {
+        "projects": [
+          {
+            "id": "app",
+            "kind": "go_project",
+            "name": "app",
+            "path": ".",
+            "effective_path": ".",
+            "attributes": {
+              "go_version": "1.24"
+            }
+          }
+        ],
+        "components": [
+          {
+            "id": "component_1",
+            "kind": "fact",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "app"
+          },
+          {
+            "id": "component_2",
+            "kind": "json_file",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "app"
+          },
+          {
+            "id": "component_3",
+            "kind": "json_file",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "app"
+          },
+          {
+            "id": "component_4",
+            "kind": "toml_file",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "app"
+          },
+          {
+            "id": "component_5",
+            "kind": "bootstrap_requirement",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "app"
+          },
+          {
+            "id": "component_6",
+            "kind": "task",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "app"
+          },
+          {
+            "id": "component_7",
+            "kind": "trigger_binding",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "app"
+          }
+        ]
+      }
+    },
+    "current_owned_values": {
+      ".gitattributes": {
+        "moltark.block": "\"# BEGIN Moltark managed\\n.moltark/** linguist-generated=true\\n# END Moltark managed\""
+      },
+      ".golangci.toml": {
+        "run.go": "\"1.24\""
+      },
+      ".vscode/extensions.json": {
+        "/recommendations": "[\"golang.Go\"]"
+      },
+      ".vscode/settings.json": {
+        "/editor.codeActionsOnSave/source.fixAll": "\"explicit\"",
+        "/go.formatTool": "\"gofumpt\"",
+        "/go.lintOnSave": "\"package\"",
+        "/go.lintTool": "\"golangci-lint\""
+      }
+    }
+  }
+stderr:
+  <empty>
+
+/-/-/-/
+== Moltarkfile ==
+core = use("moltark/core")
+
+app = core.project(
+    id = "app",
+    kind = "go_project",
+    path = ".",
+    attributes = {
+        "go_version": "1.24",
+    },
+)
+
+core.bootstrap_requirement(
+    tool = "golangci-lint",
+    target = app,
+    purpose = "Go linting",
+    strategies = ["brew", "mise"],
+)
+
+core.fact(
+    name = "moltark.language.go",
+    target = app,
+    values = {
+        "version": "1.24",
+    },
+)
+
+core.task(
+    name = "lint",
+    target = app,
+    command = ["golangci-lint", "run", "./..."],
+    runtime = "go",
+    tags = ["lint", "go"],
+)
+
+core.trigger_binding(
+    trigger = "pre-commit",
+    target = app,
+    match_names = ["lint"],
+)
+
+core.json_file(
+    target = app,
+    path = ".vscode/settings.json",
+    values = {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+        },
+        "go.formatTool": "gofumpt",
+        "go.lintOnSave": "package",
+        "go.lintTool": "golangci-lint",
+    },
+)
+
+core.json_file(
+    target = app,
+    path = ".vscode/extensions.json",
+    values = {
+        "recommendations": [
+            "golang.Go",
+        ],
+    },
+)
+
+core.toml_file(
+    target = app,
+    path = ".golangci.toml",
+    values = {
+        "run": {
+            "go": core.fact_value(
+                target = app,
+                name = "moltark.language.go",
+                path = "version",
+            ),
+        },
+    },
+)
+
+== .golangci.toml ==
+[run]
+go = "1.24"
+
+== .vscode/extensions.json ==
+{
+  "recommendations": [
+    "golang.Go"
+  ]
+}
+
+== .vscode/settings.json ==
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  "go.formatTool": "gofumpt",
+  "go.lintOnSave": "package",
+  "go.lintTool": "golangci-lint"
+}
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "managed_files": [
+    {
+      "path": ".golangci.toml",
+      "owned_paths": [
+        "run.go"
+      ],
+      "owned_path_versions": {
+        "run.go": "core/v1"
+      },
+      "fingerprints": {
+        "run.go": "01f6e30562dc810118d3b8c35f1674ff5c6b2f2c033a4bcb134aaa94d6f6c2cb"
+      }
+    },
+    {
+      "path": ".vscode/extensions.json",
+      "owned_paths": [
+        "/recommendations"
+      ],
+      "owned_path_versions": {
+        "/recommendations": "core/v1"
+      },
+      "fingerprints": {
+        "/recommendations": "3ccff0cf85d90dcb87d86faf9516c49bc96160ea646784c0048c195b9f07f12e"
+      }
+    },
+    {
+      "path": ".vscode/settings.json",
+      "owned_paths": [
+        "/editor.codeActionsOnSave/source.fixAll",
+        "/go.formatTool",
+        "/go.lintOnSave",
+        "/go.lintTool"
+      ],
+      "owned_path_versions": {
+        "/editor.codeActionsOnSave/source.fixAll": "core/v1",
+        "/go.formatTool": "core/v1",
+        "/go.lintOnSave": "core/v1",
+        "/go.lintTool": "core/v1"
+      },
+      "fingerprints": {
+        "/editor.codeActionsOnSave/source.fixAll": "283bf832ef3ec4894c7872546a9805c38081b661992c5fbb557530368f8214ad",
+        "/go.formatTool": "b6621d09a7d624e492650d46cae4b2946b9f63c03d9c337d292069c278f73b12",
+        "/go.lintOnSave": "b2c19c2870165d8e08384acc1c080de2d811fe6e625c6558defc98802a3287d2",
+        "/go.lintTool": "acbc4079826290285879e0767b8dfc7654f482081fccf719e9439d06c8136cc8"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "app",
+        "kind": "go_project",
+        "name": "app",
+        "path": ".",
+        "effective_path": ".",
+        "attributes": {
+          "go_version": "1.24"
+        }
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "fact",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "app"
+      },
+      {
+        "id": "component_2",
+        "kind": "json_file",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "app"
+      },
+      {
+        "id": "component_3",
+        "kind": "json_file",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "app"
+      },
+      {
+        "id": "component_4",
+        "kind": "toml_file",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "app"
+      },
+      {
+        "id": "component_5",
+        "kind": "bootstrap_requirement",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "app"
+      },
+      {
+        "id": "component_6",
+        "kind": "task",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "app"
+      },
+      {
+        "id": "component_7",
+        "kind": "trigger_binding",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "app"
+      }
+    ]
+  }
+}
+
+---
+
+[TestOpaqueRootProjectWithPythonChild - 1]
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 11 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create backend/pyproject.toml
+  set project.name = "backend"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark apply -auto-approve
+exit: 0
+stdout:
+  Plan: 11 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create backend/pyproject.toml
+  set project.name = "backend"
+  set project.version = "0.1.0"
+  set project.requires-python = ">=3.12"
+  set build-system.requires = ["hatchling"]
+  set build-system.build-backend = "hatchling.build"
+  set tool.moltark.schema-version = 1
+  set tool.moltark.template-version = "python/v2"
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+  Apply complete.
+  wrote backend/pyproject.toml
+  wrote .gitattributes
+  wrote .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 0 to update, 0 drift, 0 conflict, 8 no-op
+  no change to project.name
+  no change to project.version
+  no change to project.requires-python
+  no change to build-system.requires
+  no change to build-system.build-backend
+  no change to tool.moltark.schema-version
+  no change to tool.moltark.template-version
+  no change to Moltark managed block
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark show
+exit: 0
+stdout:
+  {
+    "desired": {
+      "projects": [
+        {
+          "id": "repo",
+          "kind": "workspace",
+          "name": "repo",
+          "path": ".",
+          "effective_path": "."
+        },
+        {
+          "id": "backend",
+          "kind": "python_project",
+          "name": "backend",
+          "path": "backend",
+          "effective_path": "backend",
+          "parent_id": "repo",
+          "python": {
+            "version": "0.1.0",
+            "requires_python": "\u003e=3.12",
+            "template_version": "python/v2",
+            "build_system": {
+              "requires": [
+                "hatchling"
+              ],
+              "backend": "hatchling.build"
+            }
+          }
+        }
+      ],
+      "components": [
+        {
+          "id": "component_1",
+          "kind": "python_project",
+          "module": "moltark/python",
+          "version": "python/v2",
+          "target_project_id": "backend",
+          "facts": [
+            {
+              "name": "moltark.language.python",
+              "scope_project_id": "backend",
+              "values": {
+                "package_version": "0.1.0",
+                "requires_python": "\u003e=3.12"
+              }
+            }
+          ],
+          "files": [
+            {
+              "path": "backend/pyproject.toml",
+              "format": "toml",
+              "owned_paths": [
+                "project.name",
+                "project.version",
+                "project.requires-python",
+                "build-system.requires",
+                "build-system.build-backend",
+                "tool.moltark.schema-version",
+                "tool.moltark.template-version"
+              ],
+              "user_managed_paths": [
+                "project.dependencies"
+              ],
+              "desired_values": {
+                "build-system": {
+                  "build-backend": "hatchling.build",
+                  "requires": [
+                    "hatchling"
+                  ]
+                },
+                "project": {
+                  "name": "backend",
+                  "requires-python": "\u003e=3.12",
+                  "version": "0.1.0"
+                },
+                "tool": {
+                  "moltark": {
+                    "schema-version": 1,
+                    "template-version": "python/v2"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "resolved": {
+      "managed_files": [
+        {
+          "path": "backend/pyproject.toml",
+          "format": "toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version"
+          ],
+          "owned_path_owners": {
+            "build-system.build-backend": "component_1",
+            "build-system.requires": "component_1",
+            "project.name": "component_1",
+            "project.requires-python": "component_1",
+            "project.version": "component_1",
+            "tool.moltark.schema-version": "component_1",
+            "tool.moltark.template-version": "component_1"
+          },
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "user_managed_paths": [
+            "project.dependencies"
+          ],
+          "desired_values": {
+            "build-system": {
+              "build-backend": "hatchling.build",
+              "requires": [
+                "hatchling"
+              ]
+            },
+            "project": {
+              "name": "backend",
+              "requires-python": "\u003e=3.12",
+              "version": "0.1.0"
+            },
+            "tool": {
+              "moltark": {
+                "schema-version": 1,
+                "template-version": "python/v2"
+              }
+            }
+          },
+          "source_components": [
+            "component_1"
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "component_id": "component_1",
+          "name": "moltark.language.python",
+          "scope_project_id": "backend",
+          "values": {
+            "package_version": "0.1.0",
+            "requires_python": "\u003e=3.12"
+          }
+        }
+      ],
+      "providers": [],
+      "resolved_intents": []
+    },
+    "state": {
+      "schema_version": 1,
+      "managed_files": [
+        {
+          "path": "backend/pyproject.toml",
+          "owned_paths": [
+            "project.name",
+            "project.version",
+            "project.requires-python",
+            "build-system.requires",
+            "build-system.build-backend",
+            "tool.moltark.schema-version",
+            "tool.moltark.template-version"
+          ],
+          "owned_path_versions": {
+            "build-system.build-backend": "python/v2",
+            "build-system.requires": "python/v2",
+            "project.name": "python/v2",
+            "project.requires-python": "python/v2",
+            "project.version": "python/v2",
+            "tool.moltark.schema-version": "python/v2",
+            "tool.moltark.template-version": "python/v2"
+          },
+          "fingerprints": {
+            "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+            "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+            "project.name": "39542482a5fce9857777db7aa4bf936fe414d326e1e154397afcf4360eac6c19",
+            "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+            "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+            "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+            "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+          }
+        },
+        {
+          "path": ".gitattributes",
+          "owned_paths": [
+            "moltark.block"
+          ],
+          "fingerprints": {
+            "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+          }
+        }
+      ],
+      "last_applied_model": {
+        "projects": [
+          {
+            "id": "repo",
+            "kind": "workspace",
+            "name": "repo",
+            "path": ".",
+            "effective_path": "."
+          },
+          {
+            "id": "backend",
+            "kind": "python_project",
+            "name": "backend",
+            "path": "backend",
+            "effective_path": "backend",
+            "parent_id": "repo"
+          }
+        ],
+        "components": [
+          {
+            "id": "component_1",
+            "kind": "python_project",
+            "module": "moltark/python",
+            "version": "python/v2",
+            "target_project_id": "backend"
+          }
+        ]
+      }
+    },
+    "current_owned_values": {
+      ".gitattributes": {
+        "moltark.block": "\"# BEGIN Moltark managed\\n.moltark/** linguist-generated=true\\n# END Moltark managed\""
+      },
+      "backend/pyproject.toml": {
+        "build-system.build-backend": "\"hatchling.build\"",
+        "build-system.requires": "[\"hatchling\"]",
+        "project.name": "\"backend\"",
+        "project.requires-python": "\"\u003e=3.12\"",
+        "project.version": "\"0.1.0\"",
+        "tool.moltark.schema-version": "1",
+        "tool.moltark.template-version": "\"python/v2\""
+      }
+    }
+  }
+stderr:
+  <empty>
+
+/-/-/-/
+== Moltarkfile ==
+core = use("moltark/core")
+python = use("moltark/python")
+
+repo = core.project(
+    id = "repo",
+    kind = "workspace",
+    path = ".",
+)
+
+python.python_project(
+    id = "backend",
+    parent = repo,
+    name = "backend",
+    path = "backend",
+    version = "0.1.0",
+    requires_python = ">=3.12",
+)
+
+== backend/pyproject.toml ==
+[project]
+name = "backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.moltark]
+schema-version = 1
+template-version = "python/v2"
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "managed_files": [
+    {
+      "path": "backend/pyproject.toml",
+      "owned_paths": [
+        "project.name",
+        "project.version",
+        "project.requires-python",
+        "build-system.requires",
+        "build-system.build-backend",
+        "tool.moltark.schema-version",
+        "tool.moltark.template-version"
+      ],
+      "owned_path_versions": {
+        "build-system.build-backend": "python/v2",
+        "build-system.requires": "python/v2",
+        "project.name": "python/v2",
+        "project.requires-python": "python/v2",
+        "project.version": "python/v2",
+        "tool.moltark.schema-version": "python/v2",
+        "tool.moltark.template-version": "python/v2"
+      },
+      "fingerprints": {
+        "build-system.build-backend": "5d01f1df92d4831c75f51159103018bac77ee296037ed474ee758f9cfd89cf12",
+        "build-system.requires": "42ecf183429a23dc500951e91c7598dae0bb650adc19b23a577323359f203b46",
+        "project.name": "39542482a5fce9857777db7aa4bf936fe414d326e1e154397afcf4360eac6c19",
+        "project.requires-python": "bf62752902a993122f5fcadad900b9731c1be8e37cf9a3d00ee009d7a9bc2fd4",
+        "project.version": "089cf9d4b1cd33e0b19227c37b713f4bcce5e5c9c2ea957f2f6902709762b670",
+        "tool.moltark.schema-version": "ff0735732dde2768b6790ed5bcf4658d7cca88000891d8fc440c5e9b4a034bc4",
+        "tool.moltark.template-version": "a16332fc0bbf904e0a67999eec154c2edec3a84556c2dea3c95edbbba4013d25"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "repo",
+        "kind": "workspace",
+        "name": "repo",
+        "path": ".",
+        "effective_path": "."
+      },
+      {
+        "id": "backend",
+        "kind": "python_project",
+        "name": "backend",
+        "path": "backend",
+        "effective_path": "backend",
+        "parent_id": "repo"
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "python_project",
+        "module": "moltark/python",
+        "version": "python/v2",
+        "target_project_id": "backend"
+      }
+    ]
+  }
+}
+
+---
+
+[TestCoreStructuredFilePrimitives - 1]
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 12 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create .github/labeler.yml
+  set /docs/changed-files/any-glob-to-any-file = ["docs/**","README.md"]
+  set /go/changed-files/any-glob-to-any-file = ["**/*.go"]
+  create .vscode/settings.json
+  set /editor.codeActionsOnSave/source.fixAll = "explicit"
+  set /files.trimTrailingWhitespace = true
+  create typos.toml
+  set default.extend-words.teh = "teh"
+  set files.extend-exclude = ["vendor/**"]
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark apply -auto-approve
+exit: 0
+stdout:
+  Plan: 12 to create, 0 to update, 0 drift, 0 conflict, 0 no-op
+  create .github/labeler.yml
+  set /docs/changed-files/any-glob-to-any-file = ["docs/**","README.md"]
+  set /go/changed-files/any-glob-to-any-file = ["**/*.go"]
+  create .vscode/settings.json
+  set /editor.codeActionsOnSave/source.fixAll = "explicit"
+  set /files.trimTrailingWhitespace = true
+  create typos.toml
+  set default.extend-words.teh = "teh"
+  set files.extend-exclude = ["vendor/**"]
+  create .gitattributes
+  ensure Moltark managed block in .gitattributes
+  initialize .moltark/state.json
+  Apply complete.
+  wrote .github/labeler.yml
+  wrote .vscode/settings.json
+  wrote typos.toml
+  wrote .gitattributes
+  wrote .moltark/state.json
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark plan
+exit: 0
+stdout:
+  Plan: 0 to create, 0 to update, 0 drift, 0 conflict, 7 no-op
+  no change to /docs/changed-files/any-glob-to-any-file
+  no change to /go/changed-files/any-glob-to-any-file
+  no change to /editor.codeActionsOnSave/source.fixAll
+  no change to /files.trimTrailingWhitespace
+  no change to default.extend-words.teh
+  no change to files.extend-exclude
+  no change to Moltark managed block
+stderr:
+  <empty>
+
+/-/-/-/
+$ moltark show
+exit: 0
+stdout:
+  {
+    "desired": {
+      "projects": [
+        {
+          "id": "repo",
+          "kind": "workspace",
+          "name": "repo",
+          "path": ".",
+          "effective_path": "."
+        }
+      ],
+      "components": [
+        {
+          "id": "component_1",
+          "kind": "json_file",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "repo",
+          "files": [
+            {
+              "path": ".vscode/settings.json",
+              "format": "json",
+              "owned_paths": [
+                "/editor.codeActionsOnSave/source.fixAll",
+                "/files.trimTrailingWhitespace"
+              ],
+              "desired_values": {
+                "editor.codeActionsOnSave": {
+                  "source.fixAll": "explicit"
+                },
+                "files.trimTrailingWhitespace": true
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_2",
+          "kind": "toml_file",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "repo",
+          "files": [
+            {
+              "path": "typos.toml",
+              "format": "toml",
+              "owned_paths": [
+                "default.extend-words.teh",
+                "files.extend-exclude"
+              ],
+              "desired_values": {
+                "default": {
+                  "extend-words": {
+                    "teh": "teh"
+                  }
+                },
+                "files": {
+                  "extend-exclude": [
+                    "vendor/**"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "component_3",
+          "kind": "yaml_file",
+          "module": "moltark/core",
+          "version": "core/v1",
+          "target_project_id": "repo",
+          "files": [
+            {
+              "path": ".github/labeler.yml",
+              "format": "yaml",
+              "owned_paths": [
+                "/docs/changed-files/any-glob-to-any-file",
+                "/go/changed-files/any-glob-to-any-file"
+              ],
+              "desired_values": {
+                "docs": {
+                  "changed-files": {
+                    "any-glob-to-any-file": [
+                      "docs/**",
+                      "README.md"
+                    ]
+                  }
+                },
+                "go": {
+                  "changed-files": {
+                    "any-glob-to-any-file": [
+                      "**/*.go"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "resolved": {
+      "managed_files": [
+        {
+          "path": ".github/labeler.yml",
+          "format": "yaml",
+          "owned_paths": [
+            "/docs/changed-files/any-glob-to-any-file",
+            "/go/changed-files/any-glob-to-any-file"
+          ],
+          "owned_path_owners": {
+            "/docs/changed-files/any-glob-to-any-file": "component_3",
+            "/go/changed-files/any-glob-to-any-file": "component_3"
+          },
+          "owned_path_versions": {
+            "/docs/changed-files/any-glob-to-any-file": "core/v1",
+            "/go/changed-files/any-glob-to-any-file": "core/v1"
+          },
+          "desired_values": {
+            "docs": {
+              "changed-files": {
+                "any-glob-to-any-file": [
+                  "docs/**",
+                  "README.md"
+                ]
+              }
+            },
+            "go": {
+              "changed-files": {
+                "any-glob-to-any-file": [
+                  "**/*.go"
+                ]
+              }
+            }
+          },
+          "source_components": [
+            "component_3"
+          ]
+        },
+        {
+          "path": ".vscode/settings.json",
+          "format": "json",
+          "owned_paths": [
+            "/editor.codeActionsOnSave/source.fixAll",
+            "/files.trimTrailingWhitespace"
+          ],
+          "owned_path_owners": {
+            "/editor.codeActionsOnSave/source.fixAll": "component_1",
+            "/files.trimTrailingWhitespace": "component_1"
+          },
+          "owned_path_versions": {
+            "/editor.codeActionsOnSave/source.fixAll": "core/v1",
+            "/files.trimTrailingWhitespace": "core/v1"
+          },
+          "desired_values": {
+            "editor.codeActionsOnSave": {
+              "source.fixAll": "explicit"
+            },
+            "files.trimTrailingWhitespace": true
+          },
+          "source_components": [
+            "component_1"
+          ]
+        },
+        {
+          "path": "typos.toml",
+          "format": "toml",
+          "owned_paths": [
+            "default.extend-words.teh",
+            "files.extend-exclude"
+          ],
+          "owned_path_owners": {
+            "default.extend-words.teh": "component_2",
+            "files.extend-exclude": "component_2"
+          },
+          "owned_path_versions": {
+            "default.extend-words.teh": "core/v1",
+            "files.extend-exclude": "core/v1"
+          },
+          "desired_values": {
+            "default": {
+              "extend-words": {
+                "teh": "teh"
+              }
+            },
+            "files": {
+              "extend-exclude": [
+                "vendor/**"
+              ]
+            }
+          },
+          "source_components": [
+            "component_2"
+          ]
+        }
+      ],
+      "providers": [],
+      "resolved_intents": []
+    },
+    "state": {
+      "schema_version": 1,
+      "managed_files": [
+        {
+          "path": ".github/labeler.yml",
+          "owned_paths": [
+            "/docs/changed-files/any-glob-to-any-file",
+            "/go/changed-files/any-glob-to-any-file"
+          ],
+          "owned_path_versions": {
+            "/docs/changed-files/any-glob-to-any-file": "core/v1",
+            "/go/changed-files/any-glob-to-any-file": "core/v1"
+          },
+          "fingerprints": {
+            "/docs/changed-files/any-glob-to-any-file": "7ab75cf02641ca0703e845a9dbf2fadaf4e89710acb84e4f86463eda04ebe4af",
+            "/go/changed-files/any-glob-to-any-file": "0bdc1b61581a0d682b8ea6ab2acfda3ff27aa5c9b31eb0171f828c2810e6d96d"
+          }
+        },
+        {
+          "path": ".vscode/settings.json",
+          "owned_paths": [
+            "/editor.codeActionsOnSave/source.fixAll",
+            "/files.trimTrailingWhitespace"
+          ],
+          "owned_path_versions": {
+            "/editor.codeActionsOnSave/source.fixAll": "core/v1",
+            "/files.trimTrailingWhitespace": "core/v1"
+          },
+          "fingerprints": {
+            "/editor.codeActionsOnSave/source.fixAll": "283bf832ef3ec4894c7872546a9805c38081b661992c5fbb557530368f8214ad",
+            "/files.trimTrailingWhitespace": "a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f"
+          }
+        },
+        {
+          "path": "typos.toml",
+          "owned_paths": [
+            "default.extend-words.teh",
+            "files.extend-exclude"
+          ],
+          "owned_path_versions": {
+            "default.extend-words.teh": "core/v1",
+            "files.extend-exclude": "core/v1"
+          },
+          "fingerprints": {
+            "default.extend-words.teh": "6f27af5f1efde01b35f9f880a29af91045dbf494c65548b03425c8dfe7306758",
+            "files.extend-exclude": "9501ae3600768160dbd571cbb365974a0368e3983f341edcd783b53e46c0d9d8"
+          }
+        },
+        {
+          "path": ".gitattributes",
+          "owned_paths": [
+            "moltark.block"
+          ],
+          "fingerprints": {
+            "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+          }
+        }
+      ],
+      "last_applied_model": {
+        "projects": [
+          {
+            "id": "repo",
+            "kind": "workspace",
+            "name": "repo",
+            "path": ".",
+            "effective_path": "."
+          }
+        ],
+        "components": [
+          {
+            "id": "component_1",
+            "kind": "json_file",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "repo"
+          },
+          {
+            "id": "component_2",
+            "kind": "toml_file",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "repo"
+          },
+          {
+            "id": "component_3",
+            "kind": "yaml_file",
+            "module": "moltark/core",
+            "version": "core/v1",
+            "target_project_id": "repo"
+          }
+        ]
+      }
+    },
+    "current_owned_values": {
+      ".gitattributes": {
+        "moltark.block": "\"# BEGIN Moltark managed\\n.moltark/** linguist-generated=true\\n# END Moltark managed\""
+      },
+      ".github/labeler.yml": {
+        "/docs/changed-files/any-glob-to-any-file": "[\"docs/**\",\"README.md\"]",
+        "/go/changed-files/any-glob-to-any-file": "[\"**/*.go\"]"
+      },
+      ".vscode/settings.json": {
+        "/editor.codeActionsOnSave/source.fixAll": "\"explicit\"",
+        "/files.trimTrailingWhitespace": "true"
+      },
+      "typos.toml": {
+        "default.extend-words.teh": "\"teh\"",
+        "files.extend-exclude": "[\"vendor/**\"]"
+      }
+    }
+  }
+stderr:
+  <empty>
+
+/-/-/-/
+== Moltarkfile ==
+core = use("moltark/core")
+
+repo = core.project(
+    id = "repo",
+    kind = "workspace",
+    path = ".",
+)
+
+core.json_file(
+    target = repo,
+    path = ".vscode/settings.json",
+    values = {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+        },
+        "files.trimTrailingWhitespace": True,
+    },
+)
+
+core.toml_file(
+    target = repo,
+    path = "typos.toml",
+    values = {
+        "default": {
+            "extend-words": {
+                "teh": "teh",
+            },
+        },
+        "files": {
+            "extend-exclude": [
+                "vendor/**",
+            ],
+        },
+    },
+)
+
+core.yaml_file(
+    target = repo,
+    path = ".github/labeler.yml",
+    values = {
+        "docs": {
+            "changed-files": {
+                "any-glob-to-any-file": [
+                    "docs/**",
+                    "README.md",
+                ],
+            },
+        },
+        "go": {
+            "changed-files": {
+                "any-glob-to-any-file": [
+                    "**/*.go",
+                ],
+            },
+        },
+    },
+)
+
+== .github/labeler.yml ==
+docs:
+  changed-files:
+    any-glob-to-any-file:
+    - docs/**
+    - README.md
+go:
+  changed-files:
+    any-glob-to-any-file:
+    - "**/*.go"
+
+== .vscode/settings.json ==
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  "files.trimTrailingWhitespace": true
+}
+
+== typos.toml ==
+[default.extend-words]
+teh = "teh"
+
+[files]
+extend-exclude = ["vendor/**"]
+
+== .gitattributes ==
+# BEGIN Moltark managed
+.moltark/** linguist-generated=true
+# END Moltark managed
+
+== .moltark/state.json ==
+{
+  "schema_version": 1,
+  "managed_files": [
+    {
+      "path": ".github/labeler.yml",
+      "owned_paths": [
+        "/docs/changed-files/any-glob-to-any-file",
+        "/go/changed-files/any-glob-to-any-file"
+      ],
+      "owned_path_versions": {
+        "/docs/changed-files/any-glob-to-any-file": "core/v1",
+        "/go/changed-files/any-glob-to-any-file": "core/v1"
+      },
+      "fingerprints": {
+        "/docs/changed-files/any-glob-to-any-file": "7ab75cf02641ca0703e845a9dbf2fadaf4e89710acb84e4f86463eda04ebe4af",
+        "/go/changed-files/any-glob-to-any-file": "0bdc1b61581a0d682b8ea6ab2acfda3ff27aa5c9b31eb0171f828c2810e6d96d"
+      }
+    },
+    {
+      "path": ".vscode/settings.json",
+      "owned_paths": [
+        "/editor.codeActionsOnSave/source.fixAll",
+        "/files.trimTrailingWhitespace"
+      ],
+      "owned_path_versions": {
+        "/editor.codeActionsOnSave/source.fixAll": "core/v1",
+        "/files.trimTrailingWhitespace": "core/v1"
+      },
+      "fingerprints": {
+        "/editor.codeActionsOnSave/source.fixAll": "283bf832ef3ec4894c7872546a9805c38081b661992c5fbb557530368f8214ad",
+        "/files.trimTrailingWhitespace": "a56ab70691a68282d1c92ad09d3cfc1eb7a1b1ad3ad4f8fc9520cbac7af63d8f"
+      }
+    },
+    {
+      "path": "typos.toml",
+      "owned_paths": [
+        "default.extend-words.teh",
+        "files.extend-exclude"
+      ],
+      "owned_path_versions": {
+        "default.extend-words.teh": "core/v1",
+        "files.extend-exclude": "core/v1"
+      },
+      "fingerprints": {
+        "default.extend-words.teh": "6f27af5f1efde01b35f9f880a29af91045dbf494c65548b03425c8dfe7306758",
+        "files.extend-exclude": "9501ae3600768160dbd571cbb365974a0368e3983f341edcd783b53e46c0d9d8"
+      }
+    },
+    {
+      "path": ".gitattributes",
+      "owned_paths": [
+        "moltark.block"
+      ],
+      "fingerprints": {
+        "moltark.block": "757a1c1f0e409b9bbff1ffccab7a8d2ddb3887ac72f49fde3f6427a03fa13196"
+      }
+    }
+  ],
+  "last_applied_model": {
+    "projects": [
+      {
+        "id": "repo",
+        "kind": "workspace",
+        "name": "repo",
+        "path": ".",
+        "effective_path": "."
+      }
+    ],
+    "components": [
+      {
+        "id": "component_1",
+        "kind": "json_file",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "repo"
+      },
+      {
+        "id": "component_2",
+        "kind": "toml_file",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "repo"
+      },
+      {
+        "id": "component_3",
+        "kind": "yaml_file",
+        "module": "moltark/core",
+        "version": "core/v1",
+        "target_project_id": "repo"
+      }
+    ]
+  }
+}
+
+---
