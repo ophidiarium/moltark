@@ -1572,13 +1572,15 @@ stdout:
           "format": "toml",
           "exists": true,
           "owned_values": {
-            "build-system.build-backend": "\"hatchling.build\"",
-            "build-system.requires": "[\"hatchling\"]",
-            "project.name": "\"tally-intellij\"",
-            "project.requires-python": "\"\u003e=3.12\"",
-            "project.version": "\"0.1.0\"",
-            "tool.moltark.schema-version": "1",
-            "tool.moltark.template-version": "\"python/v2\""
+            "build-system.build-backend": "hatchling.build",
+            "build-system.requires": [
+              "hatchling"
+            ],
+            "project.name": "tally-intellij",
+            "project.requires-python": "\u003e=3.12",
+            "project.version": "0.1.0",
+            "tool.moltark.schema-version": 1,
+            "tool.moltark.template-version": "python/v2"
           }
         },
         {
@@ -1586,13 +1588,15 @@ stdout:
           "format": "toml",
           "exists": true,
           "owned_values": {
-            "build-system.build-backend": "\"hatchling.build\"",
-            "build-system.requires": "[\"hatchling\"]",
-            "project.name": "\"tally-vscode\"",
-            "project.requires-python": "\"\u003e=3.12\"",
-            "project.version": "\"0.1.0\"",
-            "tool.moltark.schema-version": "1",
-            "tool.moltark.template-version": "\"python/v2\""
+            "build-system.build-backend": "hatchling.build",
+            "build-system.requires": [
+              "hatchling"
+            ],
+            "project.name": "tally-vscode",
+            "project.requires-python": "\u003e=3.12",
+            "project.version": "0.1.0",
+            "tool.moltark.schema-version": 1,
+            "tool.moltark.template-version": "python/v2"
           }
         },
         {
@@ -1600,14 +1604,19 @@ stdout:
           "format": "toml",
           "exists": true,
           "owned_values": {
-            "build-system.build-backend": "\"hatchling.build\"",
-            "build-system.requires": "[\"hatchling\"]",
-            "project.name": "\"tally\"",
-            "project.requires-python": "\"\u003e=3.12\"",
-            "project.version": "\"0.1.0\"",
-            "tool.moltark.schema-version": "1",
-            "tool.moltark.template-version": "\"python/v2\"",
-            "tool.uv.workspace.members": "[\"_integrations/vscode-tally\", \"_integrations/intellij-tally\"]"
+            "build-system.build-backend": "hatchling.build",
+            "build-system.requires": [
+              "hatchling"
+            ],
+            "project.name": "tally",
+            "project.requires-python": "\u003e=3.12",
+            "project.version": "0.1.0",
+            "tool.moltark.schema-version": 1,
+            "tool.moltark.template-version": "python/v2",
+            "tool.uv.workspace.members": [
+              "_integrations/vscode-tally",
+              "_integrations/intellij-tally"
+            ]
           }
         }
       ],
@@ -3165,13 +3174,15 @@ stdout:
           "format": "toml",
           "exists": true,
           "owned_values": {
-            "build-system.build-backend": "\"hatchling.build\"",
-            "build-system.requires": "[\"hatchling\"]",
-            "project.name": "\"demo-worker\"",
-            "project.requires-python": "\"\u003e=3.12\"",
-            "project.version": "\"0.1.0\"",
-            "tool.moltark.schema-version": "1",
-            "tool.moltark.template-version": "\"python/v2\""
+            "build-system.build-backend": "hatchling.build",
+            "build-system.requires": [
+              "hatchling"
+            ],
+            "project.name": "demo-worker",
+            "project.requires-python": "\u003e=3.12",
+            "project.version": "0.1.0",
+            "tool.moltark.schema-version": 1,
+            "tool.moltark.template-version": "python/v2"
           }
         },
         {
@@ -3179,14 +3190,18 @@ stdout:
           "format": "toml",
           "exists": true,
           "owned_values": {
-            "build-system.build-backend": "\"hatchling.build\"",
-            "build-system.requires": "[\"hatchling\"]",
-            "project.name": "\"demo\"",
-            "project.requires-python": "\"\u003e=3.12\"",
-            "project.version": "\"0.1.0\"",
-            "tool.moltark.schema-version": "1",
-            "tool.moltark.template-version": "\"python/v2\"",
-            "tool.uv.workspace.members": "[\"packages/worker\"]"
+            "build-system.build-backend": "hatchling.build",
+            "build-system.requires": [
+              "hatchling"
+            ],
+            "project.name": "demo",
+            "project.requires-python": "\u003e=3.12",
+            "project.version": "0.1.0",
+            "tool.moltark.schema-version": 1,
+            "tool.moltark.template-version": "python/v2",
+            "tool.uv.workspace.members": [
+              "packages/worker"
+            ]
           }
         }
       ],
@@ -4308,7 +4323,7 @@ stdout:
           "format": "toml",
           "exists": true,
           "owned_values": {
-            "run.go": "\"1.24\""
+            "run.go": "1.24"
           }
         },
         {
@@ -4316,7 +4331,9 @@ stdout:
           "format": "json",
           "exists": true,
           "owned_values": {
-            "/recommendations": "[\"golang.Go\"]"
+            "/recommendations": [
+              "golang.Go"
+            ]
           }
         },
         {
@@ -4324,10 +4341,10 @@ stdout:
           "format": "json",
           "exists": true,
           "owned_values": {
-            "/editor.codeActionsOnSave/source.fixAll": "\"explicit\"",
-            "/go.formatTool": "\"gofumpt\"",
-            "/go.lintOnSave": "\"package\"",
-            "/go.lintTool": "\"golangci-lint\""
+            "/editor.codeActionsOnSave/source.fixAll": "explicit",
+            "/go.formatTool": "gofumpt",
+            "/go.lintOnSave": "package",
+            "/go.lintTool": "golangci-lint"
           }
         }
       ],
@@ -5073,13 +5090,15 @@ stdout:
           "format": "toml",
           "exists": true,
           "owned_values": {
-            "build-system.build-backend": "\"hatchling.build\"",
-            "build-system.requires": "[\"hatchling\"]",
-            "project.name": "\"backend\"",
-            "project.requires-python": "\"\u003e=3.12\"",
-            "project.version": "\"0.1.0\"",
-            "tool.moltark.schema-version": "1",
-            "tool.moltark.template-version": "\"python/v2\""
+            "build-system.build-backend": "hatchling.build",
+            "build-system.requires": [
+              "hatchling"
+            ],
+            "project.name": "backend",
+            "project.requires-python": "\u003e=3.12",
+            "project.version": "0.1.0",
+            "tool.moltark.schema-version": 1,
+            "tool.moltark.template-version": "python/v2"
           }
         }
       ],
@@ -5725,8 +5744,13 @@ stdout:
           "format": "yaml",
           "exists": true,
           "owned_values": {
-            "/docs/changed-files/any-glob-to-any-file": "[\"docs/**\",\"README.md\"]",
-            "/go/changed-files/any-glob-to-any-file": "[\"**/*.go\"]"
+            "/docs/changed-files/any-glob-to-any-file": [
+              "docs/**",
+              "README.md"
+            ],
+            "/go/changed-files/any-glob-to-any-file": [
+              "**/*.go"
+            ]
           }
         },
         {
@@ -5734,8 +5758,8 @@ stdout:
           "format": "json",
           "exists": true,
           "owned_values": {
-            "/editor.codeActionsOnSave/source.fixAll": "\"explicit\"",
-            "/files.trimTrailingWhitespace": "true"
+            "/editor.codeActionsOnSave/source.fixAll": "explicit",
+            "/files.trimTrailingWhitespace": true
           }
         },
         {
@@ -5743,8 +5767,10 @@ stdout:
           "format": "toml",
           "exists": true,
           "owned_values": {
-            "default.extend-words.teh": "\"teh\"",
-            "files.extend-exclude": "[\"vendor/**\"]"
+            "default.extend-words.teh": "teh",
+            "files.extend-exclude": [
+              "vendor/**"
+            ]
           }
         }
       ],

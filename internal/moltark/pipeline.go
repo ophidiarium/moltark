@@ -100,22 +100,24 @@ func inspectPhase(root string, resolve ResolutionPhase) (InspectionPhase, map[st
 			Path:        managedFile.Path,
 			Format:      managedFile.Format,
 			Exists:      doc.Exists,
-			OwnedValues: map[string]string{},
+			OwnedValues: map[string]any{},
 		}
 		for _, ownedPath := range managedFile.OwnedPaths {
 			value, ok := lookupStructuredValue(doc.Values, managedFile.Format, ownedPath)
-			inspected.OwnedValues[ownedPath] = renderDisplayValue(managedFile.Format, value, ok)
+			if ok {
+				inspected.OwnedValues[ownedPath] = value
+			}
 		}
 		if len(inspected.OwnedValues) == 0 {
 			inspected.OwnedValues = nil
 		}
 
 		if len(managedFile.UserManagedPaths) > 0 {
-			inspected.UserManagedValues = map[string]string{}
+			inspected.UserManagedValues = map[string]any{}
 			for _, userManagedPath := range managedFile.UserManagedPaths {
 				value, ok := lookupStructuredValue(doc.Values, managedFile.Format, userManagedPath)
 				if ok && value != nil {
-					inspected.UserManagedValues[userManagedPath] = renderDisplayValue(managedFile.Format, value, true)
+					inspected.UserManagedValues[userManagedPath] = value
 				}
 			}
 			if len(inspected.UserManagedValues) == 0 {

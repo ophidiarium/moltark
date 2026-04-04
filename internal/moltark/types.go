@@ -300,11 +300,11 @@ type ResolutionPhase struct {
 }
 
 type InspectedStructuredFile struct {
-	Path              string            `json:"path"`
-	Format            string            `json:"format"`
-	Exists            bool              `json:"exists"`
-	OwnedValues       map[string]string `json:"owned_values,omitempty"`
-	UserManagedValues map[string]string `json:"user_managed_values,omitempty"`
+	Path              string         `json:"path"`
+	Format            string         `json:"format"`
+	Exists            bool           `json:"exists"`
+	OwnedValues       map[string]any `json:"owned_values,omitempty"`
+	UserManagedValues map[string]any `json:"user_managed_values,omitempty"`
 }
 
 type GitattributesInspection struct {
