@@ -13,20 +13,20 @@ func NewService() Service {
 	return Service{}
 }
 
-func (Service) Plan(root string) (Plan, error) {
-	pipeline, err := (Service{}).BuildPipeline(root)
+func (s Service) Plan(root string) (Plan, error) {
+	pipeline, err := s.BuildPipeline(root)
 	if err != nil {
 		return Plan{}, err
 	}
 	return pipeline.PlanResult(), nil
 }
 
-func (Service) Apply(root string, plan Plan) (ApplyResult, error) {
+func (s Service) Apply(root string, plan Plan) (ApplyResult, error) {
 	if plan.HasConflicts() {
 		return ApplyResult{}, fmt.Errorf("cannot apply a plan with conflicts")
 	}
 
-	pipeline, err := (Service{}).BuildPipeline(root)
+	pipeline, err := s.BuildPipeline(root)
 	if err != nil {
 		return ApplyResult{}, err
 	}
