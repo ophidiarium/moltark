@@ -1,0 +1,106 @@
+---
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: 'en-US'
+early_access: true
+reviews:
+  profile: 'assertive'
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    labels:
+      - '!autorelease: tagged' # release-please
+  tools:
+    ast-grep:
+      rule_dirs:
+        - ".sg/rules"
+      util_dirs:
+        - ".sg/utils"
+    golangci-lint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    hadolint:
+      enabled: false
+    ruff:
+      enabled: false
+    markdownlint:
+      enabled: false
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+    languagetool:
+      enabled: true
+    biome:
+      enabled: false
+    yamllint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    eslint:
+      enabled: false
+    actionlint:
+      enabled: true
+  path_instructions:
+    - path: "**/*.go"
+      instructions: |
+        This project targets Go 1.26.0 (see go.mod)
+        When reviewing Go code, insist on usage of newest, modern Go features, not older versions.
+        If you're about to comment on something enforceable by a linter
+        (e.g., too many function parameters), consult .golangci.yaml
+        and propose enabling or tuning the relevant linter/rule instead—always
+        prefer enforceable mechanisms over a later review catch.
+    - path: 'internal/moltark/**/*.go'
+      instructions: |
+        Moltark is a reconciler, not a one-shot generator. Review changes in core logic against the whole reconciliation pipeline, not the touched file in isolation:
+        1. `Moltarkfile` evaluation into projects and components
+        2. fact, provider, and routed-intent resolution
+        3. managed-file ownership surfaces
+        4. plan/apply/show/doctor behavior and state updates
+        Flag any PR that improves one layer locally but weakens the full update story: explicit plans, drift detection, conflict surfacing, or deterministic re-apply.
+        Flag any PR that silently expands Moltark-owned surface without a clear ownership, state, and user-visible diagnostics story.
+    - path: 'internal/moltark/module_*.go'
+      instructions: |
+        First-party modules in this repository are the prototype for future shareable remote modules.
+        When reviewing module code, prefer generic composition through core primitives, facts, providers, and routed intents over ecosystem-specific shortcuts in the central evaluator or planner.
+        Flag any PR that hardcodes behavior into the root engine when it should live behind a module boundary or a capability contract.
+        Keep monorepo and opaque-project composition in mind: project parenting, nearest-scope provider resolution, and path containment must remain coherent across modules.
+    - path: 'tests/**/*.go'
+      instructions: |
+        This project is intentionally fixture-driven and largely AI-agent-maintained, so important behavior must remain legible at the repository-evolution level.
+        For changes touching ownership, structured-file reconciliation, facts/providers/intents, tasks/triggers, drift/conflicts, or user-visible CLI output, push for repository-level coverage:
+        - package tests for narrow invariants and helper logic
+        - integration snapshots for plan/apply/show/doctor output and resulting repo state
+        - Gherkin scenarios when the change is best expressed as a real Given/When/Then repository evolution story
+        Flag PRs that change architecture-significant behavior without matching fixture-driven coverage.
+    - path: 'tests/features/**'
+      instructions: |
+        Gherkin features are first-class deliverables in this project, not decorative duplicates.
+        Review them as durable behavioral contracts for both humans and coding agents.
+        Push for feature scenarios when the behavior can be stated in repository terms such as:
+        - bootstrap from fixtures
+        - re-apply with no churn
+        - drift or conflict surfacing
+        - preservation of user-managed edits
+        - provider, fact, task, and trigger composition across components
+        Feature files should describe observable repository and CLI behavior, not internal implementation trivia.
+    - path: '**/internal/integration/testdata/**'
+      instructions: |
+        These are test fixture files that contain intentional code patterns for testing purposes.
+        Do not provide any review comments, suggestions, or analysis.
+        Do not flag any issues or violations.
+        Simply acknowledge these are test fixtures and skip detailed review.
+  path_filters:
+    - '!**/internal/integration/testdata/**'
+    - '!CHANGELOG.md'
+chat:
+  auto_reply: true
+knowledge_base:
+  learnings:
+    scope: local
+  web_search:
+    enabled: true
