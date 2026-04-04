@@ -91,14 +91,23 @@ func (f *uvFeature) theRootProjectWritesUVWorkspaceMembersRelativeToItsPath() er
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	feature := &uvFeature{}
-	ctx.Step(`^a Python repository bootstrapped by Moltark$`, feature.aPythonRepositoryBootstrappedByMoltark)
-	ctx.Step(`^a repository declaring a nested uv workspace$`, feature.aRepositoryDeclaringANestedUVWorkspace)
-	ctx.Step(`^Moltark plan is executed$`, feature.moltarkPlanIsExecuted)
-	ctx.Step(`^Moltark apply is executed$`, feature.moltarkApplyIsExecuted)
-	ctx.Step(`^no dependency drift is reported$`, feature.noDependencyDriftIsReported)
-	ctx.Step(`^Moltark apply makes no dependency changes$`, feature.moltarkApplyMakesNoDependencyChanges)
-	ctx.Step(`^the root project writes uv workspace members relative to its path$`, feature.theRootProjectWritesUVWorkspaceMembersRelativeToItsPath)
+	uv := &uvFeature{}
+	ctx.Step(`^a Python repository bootstrapped by Moltark$`, uv.aPythonRepositoryBootstrappedByMoltark)
+	ctx.Step(`^a repository declaring a nested uv workspace$`, uv.aRepositoryDeclaringANestedUVWorkspace)
+	ctx.Step(`^Moltark plan is executed$`, uv.moltarkPlanIsExecuted)
+	ctx.Step(`^Moltark apply is executed$`, uv.moltarkApplyIsExecuted)
+	ctx.Step(`^no dependency drift is reported$`, uv.noDependencyDriftIsReported)
+	ctx.Step(`^Moltark apply makes no dependency changes$`, uv.moltarkApplyMakesNoDependencyChanges)
+	ctx.Step(`^the root project writes uv workspace members relative to its path$`, uv.theRootProjectWritesUVWorkspaceMembersRelativeToItsPath)
+
+	pipeline := &pipelineFeature{}
+	ctx.Step(`^a fresh repository initialized by Moltark$`, pipeline.aFreshRepositoryInitializedByMoltark)
+	ctx.Step(`^a repository with drifted owned fields$`, pipeline.aRepositoryWithDriftedOwnedFields)
+	ctx.Step(`^the repository is applied$`, pipeline.moltarkApplyIsExecuted)
+	ctx.Step(`^a follow-up plan is executed$`, pipeline.moltarkPlanIsExecutedAgain)
+	ctx.Step(`^the plan reports no pending changes$`, pipeline.thePlanReportsNoPendingChanges)
+	ctx.Step(`^doctor is executed$`, pipeline.moltarkDoctorIsExecuted)
+	ctx.Step(`^doctor reports drift detected$`, pipeline.doctorReportsDriftDetected)
 }
 
 func TestFeatures(t *testing.T) {
@@ -109,6 +118,7 @@ func TestFeatures(t *testing.T) {
 			Format: "pretty",
 			Paths: []string{
 				testutil.RepoPath(filepath.ToSlash(filepath.Join("tests", "features", "uv_dependencies.feature"))),
+				testutil.RepoPath(filepath.ToSlash(filepath.Join("tests", "features", "pipeline_contract.feature"))),
 			},
 			TestingT: t,
 		},
