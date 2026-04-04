@@ -60,7 +60,7 @@ func (s *State) managedFile(path string) *ManagedFileState {
 	return nil
 }
 
-func fingerprintValue(value any, present bool) string {
+func fingerprintValue(value any, present bool) (string, error) {
 	payload := map[string]any{
 		"present": present,
 		"value":   value,
@@ -68,44 +68,56 @@ func fingerprintValue(value any, present bool) string {
 
 	encoded, err := json.Marshal(payload)
 	if err != nil {
-		return ""
+		return "", fmt.Errorf("fingerprint marshal: %w", err)
 	}
 
 	sum := sha256.Sum256(encoded)
-	return hex.EncodeToString(sum[:])
+	return hex.EncodeToString(sum[:]), nil
 }
 
-func buildState(model DesiredModel, resolved ResolvedModel) State {
+func buildState(model DesiredModel, resolved ResolvedModel) (State, error) {
 	managedFiles := make([]ManagedFileState, 0, len(resolved.ManagedFiles)+1)
 	for _, file := range resolved.ManagedFiles {
 		fingerprints := make(map[string]string, len(file.OwnedPaths))
+		versions := make(map[string]string, len(file.OwnedPaths))
 		for _, ownedPath := range file.OwnedPaths {
-			value, _ := lookupPath(file.DesiredValues, ownedPath)
-			fingerprints[ownedPath] = fingerprintValue(value, true)
+			value, _ := lookupStructuredValue(file.DesiredValues, file.Format, ownedPath)
+			fingerprint, err := fingerprintValue(value, true)
+			if err != nil {
+				return State{}, fmt.Errorf("build state for %s %s: %w", file.Path, ownedPath, err)
+			}
+			fingerprints[ownedPath] = fingerprint
+			if version := file.OwnedPathVersions[ownedPath]; version != "" {
+				versions[ownedPath] = version
+			}
 		}
 
 		managedFiles = append(managedFiles, ManagedFileState{
-			Path:         file.Path,
-			OwnedPaths:   append([]string(nil), file.OwnedPaths...),
-			Fingerprints: fingerprints,
+			Path:              file.Path,
+			OwnedPaths:        append([]string(nil), file.OwnedPaths...),
+			OwnedPathVersions: versions,
+			Fingerprints:      fingerprints,
 		})
 	}
 
 	gitattributesBlock := managedGitattributesBlock()
+	gitattributesFingerprint, err := fingerprintValue(gitattributesBlock, true)
+	if err != nil {
+		return State{}, fmt.Errorf("build state for %s moltark.block: %w", GitattributesFileName, err)
+	}
 	managedFiles = append(managedFiles, ManagedFileState{
 		Path:       GitattributesFileName,
 		OwnedPaths: []string{"moltark.block"},
 		Fingerprints: map[string]string{
-			"moltark.block": fingerprintValue(gitattributesBlock, true),
+			"moltark.block": gitattributesFingerprint,
 		},
 	})
 
 	return State{
 		SchemaVersion:    SchemaVersion,
-		TemplateVersion:  TemplateVersion,
 		ManagedFiles:     managedFiles,
 		LastAppliedModel: summarizeModel(model),
-	}
+	}, nil
 }
 
 func summarizeModel(model DesiredModel) ModelSummary {
@@ -120,6 +132,7 @@ func summarizeModel(model DesiredModel) ModelSummary {
 			Name:          project.Name,
 			Path:          project.Path,
 			EffectivePath: project.EffectivePath,
+			Attributes:    cloneStringMap(project.Attributes),
 			ParentID:      project.ParentID,
 		})
 	}
@@ -128,6 +141,7 @@ func summarizeModel(model DesiredModel) ModelSummary {
 			ID:              component.ID,
 			Kind:            component.Kind,
 			Module:          component.Module,
+			Version:         component.Version,
 			TargetProjectID: component.TargetProjectID,
 		})
 	}

@@ -122,7 +122,7 @@ func (b *desiredModelBuilder) useModule(_ *starlark.Thread, _ *starlark.Builtin,
 
 func (b *desiredModelBuilder) build() (DesiredModel, error) {
 	if len(b.projects) == 0 {
-		return DesiredModel{}, fmt.Errorf("%s did not declare python_project()", MoltarkfileName)
+		return DesiredModel{}, fmt.Errorf("%s did not declare any projects", MoltarkfileName)
 	}
 
 	model := DesiredModel{
@@ -283,11 +283,11 @@ type projectRef struct {
 }
 
 func (p *projectRef) String() string {
-	return fmt.Sprintf("<python_project %s>", p.id)
+	return fmt.Sprintf("<project %s>", p.id)
 }
 
 func (p *projectRef) Type() string {
-	return "python_project_ref"
+	return "project_ref"
 }
 
 func (p *projectRef) Freeze() {}

@@ -14,7 +14,6 @@ func TestLoadStateRejectsIncompatibleSchemaVersion(t *testing.T) {
 	}
 	body := `{
   "schema_version": 999,
-  "template_version": "python/v2",
   "managed_files": [],
   "last_applied_model": {
     "projects": [],
@@ -31,6 +30,16 @@ func TestLoadStateRejectsIncompatibleSchemaVersion(t *testing.T) {
 		t.Fatal("expected schema-version mismatch to fail")
 	}
 	if !strings.Contains(err.Error(), "unsupported schema_version 999") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestFingerprintValueFailsForUnsupportedValue(t *testing.T) {
+	_, err := fingerprintValue(func() {}, true)
+	if err == nil {
+		t.Fatal("expected fingerprintValue to fail for unsupported values")
+	}
+	if !strings.Contains(err.Error(), "fingerprint marshal") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

@@ -137,7 +137,7 @@ func RenderRepoState(t *testing.T, root string) string {
 		".gitattributes",
 		".moltark/state.json",
 	}
-	var pyprojects []string
+	structuredFiles := map[string]struct{}{}
 	if err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -148,20 +148,29 @@ func RenderRepoState(t *testing.T, root string) string {
 			}
 			return nil
 		}
-		if d.Name() != "pyproject.toml" {
-			return nil
-		}
+
 		rel, err := filepath.Rel(root, path)
 		if err != nil {
 			return err
 		}
-		pyprojects = append(pyprojects, filepath.ToSlash(rel))
+		rel = filepath.ToSlash(rel)
+		switch filepath.Ext(d.Name()) {
+		case ".json", ".toml", ".yaml", ".yml":
+			if rel == ".moltark/state.json" {
+				return nil
+			}
+			structuredFiles[rel] = struct{}{}
+		}
 		return nil
 	}); err != nil {
 		t.Fatalf("walk repo state: %v", err)
 	}
-	sort.Strings(pyprojects)
-	paths = append(paths[:1], append(pyprojects, paths[1:]...)...)
+	var structured []string
+	for path := range structuredFiles {
+		structured = append(structured, path)
+	}
+	sort.Strings(structured)
+	paths = append(paths[:1], append(structured, paths[1:]...)...)
 
 	var b strings.Builder
 	for i, path := range paths {

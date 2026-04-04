@@ -1,11 +1,12 @@
 package command
 
 type VersionCommand struct {
+	Meta
 	Version string
 }
 
 func (c *VersionCommand) Run(args []string) int {
-	println(c.Version)
+	c.printLine(c.Version)
 	return 0
 }
 

@@ -60,21 +60,30 @@ func (Service) Plan(root string) (Plan, error) {
 
 		stateFile := stateManagedFile(plan.State, managedFile.Path)
 		for _, ownedPath := range managedFile.OwnedPaths {
-			desiredValue, _ := lookupPath(managedFile.DesiredValues, ownedPath)
-			actualValue, actualPresent := lookupPath(doc.Values, ownedPath)
-			changes = append(changes, classifyPath(
+			desiredValue, _ := lookupStructuredValue(managedFile.DesiredValues, managedFile.Format, ownedPath)
+			actualValue, actualPresent := lookupStructuredValue(doc.Values, managedFile.Format, ownedPath)
+			ownerComponentID := managedFile.OwnedPathOwners[ownedPath]
+			desiredVersion := managedFile.OwnedPathVersions[ownedPath]
+			change, err := classifyPath(
+				managedFile.Format,
 				managedFile.Path,
 				ownedPath,
+				ownerComponentID,
+				desiredVersion,
 				desiredValue,
 				actualValue,
 				actualPresent,
 				stateFile,
 				plan.State,
-			))
+			)
+			if err != nil {
+				return Plan{}, err
+			}
+			changes = append(changes, change)
 		}
 
 		for _, userManagedPath := range managedFile.UserManagedPaths {
-			if value, ok := lookupPath(doc.Values, userManagedPath); ok && value != nil {
+			if value, ok := lookupStructuredValue(doc.Values, managedFile.Format, userManagedPath); ok && value != nil {
 				changes = append(changes, Change{
 					Status:  ChangeNoOp,
 					File:    managedFile.Path,
@@ -96,18 +105,28 @@ func (Service) Plan(root string) (Plan, error) {
 			Summary: "create .gitattributes",
 		})
 	}
-	changes = append(changes, classifyPath(
+	change, err := classifyPath(
+		FileFormatTOML,
 		GitattributesFileName,
 		"moltark.block",
+		"",
+		"",
 		managedGitattributesBlock(),
 		block,
 		blockExists,
 		gitattributesState,
 		plan.State,
-	))
+	)
+	if err != nil {
+		return Plan{}, err
+	}
+	changes = append(changes, change)
 
 	if !hasConflict(changes) {
-		state := buildState(plan.Desired, plan.Resolved)
+		state, err := buildState(plan.Desired, plan.Resolved)
+		if err != nil {
+			return Plan{}, err
+		}
 		stateRaw, err := renderState(state)
 		if err != nil {
 			return Plan{}, err
@@ -122,10 +141,7 @@ func (Service) Plan(root string) (Plan, error) {
 				Summary: "initialize .moltark/state.json",
 			})
 		} else if stateRaw != stateDoc.Raw {
-			reason := ReasonDesiredState
-			if stateDoc.State != nil && stateDoc.State.TemplateVersion != state.TemplateVersion {
-				reason = ReasonTemplateUpgrade
-			}
+			reason := reasonForStateUpdate(stateDoc.State, &state)
 			changes = append(changes, Change{
 				Status:  ChangeUpdate,
 				File:    filepath.ToSlash(filepath.Join(StateDirName, StateFileName)),
@@ -185,7 +201,11 @@ func (Service) Apply(root string, plan Plan) (ApplyResult, error) {
 		wrote = append(wrote, GitattributesFileName)
 	}
 
-	stateBody, err := renderState(buildState(plan.Desired, plan.Resolved))
+	state, err := buildState(plan.Desired, plan.Resolved)
+	if err != nil {
+		return ApplyResult{}, err
+	}
+	stateBody, err := renderState(state)
 	if err != nil {
 		return ApplyResult{}, err
 	}
@@ -226,6 +246,29 @@ func actionableSummary(summary PlanSummary) PlanSummary {
 	return summary
 }
 
+func reasonForStateUpdate(previous *State, next *State) ChangeReason {
+	if previous == nil || next == nil {
+		return ReasonBootstrap
+	}
+	if modelHasTemplateUpgrade(previous.LastAppliedModel, next.LastAppliedModel) {
+		return ReasonTemplateUpgrade
+	}
+	return ReasonDesiredState
+}
+
+func modelHasTemplateUpgrade(previous ModelSummary, next ModelSummary) bool {
+	for _, component := range next.Components {
+		if component.Version == "" {
+			continue
+		}
+		lastVersion, ok := previous.componentVersion(component.ID)
+		if ok && lastVersion != "" && lastVersion != component.Version {
+			return true
+		}
+	}
+	return false
+}
+
 func (s Service) Show(root string) (ShowReport, error) {
 	plan, err := s.Plan(root)
 	if err != nil {
@@ -237,14 +280,14 @@ func (s Service) Show(root string) (ShowReport, error) {
 		doc := plan.fileDocs[managedFile.Path]
 		currentValues[managedFile.Path] = map[string]string{}
 		for _, ownedPath := range managedFile.OwnedPaths {
-			value, ok := lookupPath(doc.Values, ownedPath)
-			currentValues[managedFile.Path][ownedPath] = renderDisplayValue(value, ok)
+			value, ok := lookupStructuredValue(doc.Values, managedFile.Format, ownedPath)
+			currentValues[managedFile.Path][ownedPath] = renderDisplayValue(managedFile.Format, value, ok)
 		}
 	}
 
 	block, ok := currentManagedGitattributesBlock(plan.gitattributesRaw)
 	currentValues[GitattributesFileName] = map[string]string{
-		"moltark.block": renderDisplayValue(block, ok),
+		"moltark.block": renderDisplayValue(FileFormatTOML, block, ok),
 	}
 
 	return ShowReport{
@@ -304,6 +347,18 @@ func loadStructuredDocument(path string, format string) (fileDocument, error) {
 			return fileDocument{}, err
 		}
 		doc.Values = values
+	case FileFormatJSON:
+		values, err := parseJSONValues([]byte(raw))
+		if err != nil {
+			return fileDocument{}, err
+		}
+		doc.Values = values
+	case FileFormatYAML:
+		values, err := parseYAMLValues([]byte(raw))
+		if err != nil {
+			return fileDocument{}, err
+		}
+		doc.Values = values
 	default:
 		return fileDocument{}, fmt.Errorf("unsupported file format %q", format)
 	}
@@ -314,6 +369,10 @@ func mutateStructuredFile(raw string, file ManagedFileSpec) (string, error) {
 	switch file.Format {
 	case FileFormatTOML:
 		return mutateTOMLFile(raw, file.DesiredValues, file.OwnedPaths)
+	case FileFormatJSON:
+		return mutateJSONFile(raw, file.DesiredValues, file.OwnedPaths)
+	case FileFormatYAML:
+		return mutateYAMLFile(raw, file.DesiredValues, file.OwnedPaths)
 	default:
 		return "", fmt.Errorf("unsupported file format %q", file.Format)
 	}

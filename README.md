@@ -26,6 +26,11 @@ Recommended reading order:
 - [`docs/concepts/03-execution-model.md`](./docs/concepts/03-execution-model.md)
 - [`docs/testing.md`](./docs/testing.md)
 
+For the current component-centric direction, start with:
+
+- lightweight project anchors in [`docs/concepts/01-core-concepts.md`](./docs/concepts/01-core-concepts.md)
+- module/provider boundaries, first-class `json_file` / `toml_file` / `yaml_file` primitives, the minimal Go + VS Code example, and opaque root projects in [`docs/concepts/02-modules-and-providers.md`](./docs/concepts/02-modules-and-providers.md)
+
 ## The problem
 
 Most project generators are good at one thing: creating a starting point.

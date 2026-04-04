@@ -11,6 +11,7 @@ type ProjectSpec struct {
 	Name          string             `json:"name"`
 	Path          string             `json:"path"`
 	EffectivePath string             `json:"effective_path"`
+	Attributes    map[string]string  `json:"attributes,omitempty"`
 	ParentID      string             `json:"parent_id,omitempty"`
 	Python        *PythonProjectSpec `json:"python,omitempty"`
 }
@@ -26,7 +27,9 @@ type ComponentSpec struct {
 	ID                    string                     `json:"id"`
 	Kind                  string                     `json:"kind"`
 	Module                string                     `json:"module"`
+	Version               string                     `json:"version,omitempty"`
 	TargetProjectID       string                     `json:"target_project_id,omitempty"`
+	Facts                 []FactProviderSpec         `json:"facts,omitempty"`
 	Providers             []CapabilityProvider       `json:"providers,omitempty"`
 	Files                 []StructuredFileSpec       `json:"files,omitempty"`
 	SynthesisHooks        []SynthesisHookSpec        `json:"synthesis_hooks,omitempty"`
@@ -42,6 +45,18 @@ type CapabilityProvider struct {
 	ScopeProjectID string              `json:"scope_project_id,omitempty"`
 	Attributes     map[string]string   `json:"attributes,omitempty"`
 	Lists          map[string][]string `json:"lists,omitempty"`
+}
+
+type FactProviderSpec struct {
+	Name           string         `json:"name"`
+	ScopeProjectID string         `json:"scope_project_id,omitempty"`
+	Values         map[string]any `json:"values"`
+}
+
+type FactValueRef struct {
+	TargetProjectID string `json:"target_project_id"`
+	Name            string `json:"name"`
+	Path            string `json:"path"`
 }
 
 type StructuredFileSpec struct {
@@ -96,6 +111,7 @@ type TriggerBindingSpec struct {
 
 type ResolvedModel struct {
 	ManagedFiles            []ManagedFileSpec              `json:"managed_files"`
+	Facts                   []FactBinding                  `json:"facts,omitempty"`
 	Providers               []ProviderBinding              `json:"providers"`
 	SynthesisHooks          []ResolvedSynthesisHook        `json:"synthesis_hooks,omitempty"`
 	BootstrapRequirements   []ResolvedBootstrapRequirement `json:"bootstrap_requirements,omitempty"`
@@ -106,12 +122,14 @@ type ResolvedModel struct {
 }
 
 type ManagedFileSpec struct {
-	Path             string         `json:"path"`
-	Format           string         `json:"format"`
-	OwnedPaths       []string       `json:"owned_paths"`
-	UserManagedPaths []string       `json:"user_managed_paths,omitempty"`
-	DesiredValues    map[string]any `json:"desired_values"`
-	SourceComponents []string       `json:"source_components"`
+	Path              string            `json:"path"`
+	Format            string            `json:"format"`
+	OwnedPaths        []string          `json:"owned_paths"`
+	OwnedPathOwners   map[string]string `json:"owned_path_owners,omitempty"`
+	OwnedPathVersions map[string]string `json:"owned_path_versions,omitempty"`
+	UserManagedPaths  []string          `json:"user_managed_paths,omitempty"`
+	DesiredValues     map[string]any    `json:"desired_values"`
+	SourceComponents  []string          `json:"source_components"`
 }
 
 type ProviderBinding struct {
@@ -120,6 +138,13 @@ type ProviderBinding struct {
 	ScopeProjectID string              `json:"scope_project_id,omitempty"`
 	Attributes     map[string]string   `json:"attributes,omitempty"`
 	Lists          map[string][]string `json:"lists,omitempty"`
+}
+
+type FactBinding struct {
+	ComponentID    string         `json:"component_id"`
+	Name           string         `json:"name"`
+	ScopeProjectID string         `json:"scope_project_id,omitempty"`
+	Values         map[string]any `json:"values"`
 }
 
 type IntentBinding struct {
@@ -188,15 +213,15 @@ type BuildSystem struct {
 
 type State struct {
 	SchemaVersion    int                `json:"schema_version"`
-	TemplateVersion  string             `json:"template_version"`
 	ManagedFiles     []ManagedFileState `json:"managed_files"`
 	LastAppliedModel ModelSummary       `json:"last_applied_model"`
 }
 
 type ManagedFileState struct {
-	Path         string            `json:"path"`
-	OwnedPaths   []string          `json:"owned_paths"`
-	Fingerprints map[string]string `json:"fingerprints"`
+	Path              string            `json:"path"`
+	OwnedPaths        []string          `json:"owned_paths"`
+	OwnedPathVersions map[string]string `json:"owned_path_versions,omitempty"`
+	Fingerprints      map[string]string `json:"fingerprints"`
 }
 
 type ModelSummary struct {
@@ -205,18 +230,20 @@ type ModelSummary struct {
 }
 
 type ProjectSummary struct {
-	ID            string `json:"id"`
-	Kind          string `json:"kind"`
-	Name          string `json:"name"`
-	Path          string `json:"path"`
-	EffectivePath string `json:"effective_path"`
-	ParentID      string `json:"parent_id,omitempty"`
+	ID            string            `json:"id"`
+	Kind          string            `json:"kind"`
+	Name          string            `json:"name"`
+	Path          string            `json:"path"`
+	EffectivePath string            `json:"effective_path"`
+	Attributes    map[string]string `json:"attributes,omitempty"`
+	ParentID      string            `json:"parent_id,omitempty"`
 }
 
 type ComponentSummary struct {
 	ID              string `json:"id"`
 	Kind            string `json:"kind"`
 	Module          string `json:"module"`
+	Version         string `json:"version,omitempty"`
 	TargetProjectID string `json:"target_project_id,omitempty"`
 }
 
@@ -317,4 +344,13 @@ func (m DesiredModel) projectPyprojectPath(project ProjectSpec) string {
 		return PyprojectFileName
 	}
 	return joinProjectPath(project.EffectivePath, PyprojectFileName)
+}
+
+func (m ModelSummary) componentVersion(id string) (string, bool) {
+	for _, component := range m.Components {
+		if component.ID == id {
+			return component.Version, true
+		}
+	}
+	return "", false
 }

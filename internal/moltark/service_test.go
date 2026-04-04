@@ -115,6 +115,9 @@ func copyDir(src string, dst string) error {
 }
 
 func repoRoot() string {
-	_, filename, _, _ := runtime.Caller(0)
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		return filepath.Clean(".")
+	}
 	return filepath.Clean(filepath.Join(filepath.Dir(filename), "..", ".."))
 }

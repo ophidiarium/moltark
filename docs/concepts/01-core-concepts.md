@@ -25,9 +25,11 @@ Projects describe repository-contained units with:
 - `path`
 - `parent`
 - `effective_path`
+- optional `attributes`
 
 Components are contributed by modules and compile into:
 
+- facts
 - managed file intents
 - capability providers
 - routed intents
@@ -41,6 +43,27 @@ The important separation is:
 
 - projects describe containment and location
 - components describe behavior and ownership
+
+Facts are the lightweight project-scoped truth layer between those two.
+
+They let one component say:
+
+- this target supports Go `1.24`
+- this Python project requires `>=3.12`
+- this repository targets `buildkit`
+
+without forcing every consuming component to know which concrete module or component produced that information.
+
+Projects do not need to be heavyweight archetypes.
+
+They can be lightweight anchors that exist only to give components:
+
+- a target path
+- a provider scope
+- a parent-relative location
+- a stable identity in state and diagnostics
+
+That means a repository can declare a minimal project anchor and then compose only the shared components it actually wants Moltark to manage.
 
 ## Ownership
 
@@ -66,6 +89,14 @@ It intentionally does not own:
 - `project.dependencies`
 
 That preserves user or tool changes made through `uv add` / `uv remove`.
+
+Generic structured-file primitives are available through `moltark/core`:
+
+- `json_file(target=..., path=..., values=...)`
+- `toml_file(target=..., path=..., values=...)`
+- `yaml_file(target=..., path=..., values=...)`
+
+That enables component-oriented ownership for files like `.vscode/settings.json`, `typos.toml`, or `.github/labeler.yml` without requiring a large ecosystem archetype.
 
 ## Planning Semantics
 
@@ -97,9 +128,9 @@ This is what allows Moltark to distinguish:
 It currently tracks:
 
 - schema version
-- template version
 - managed files
 - owned paths
+- per-owned-path template versions when a component provides them
 - fingerprints
 - a summary of the last applied desired model
 
@@ -110,8 +141,12 @@ State is required for:
 - conflict surfacing
 - template evolution
 
+Template evolution is no longer modeled as one repo-wide version string.
+
+Instead, Moltark tracks component versions and owned-path versions where a component provides them. That lets a Python project component evolve independently from a generic JSON-only component or a future Go-specific component.
+
 ## Current Limitation
 
-The current implementation is still Python-first.
+The current implementation is still ecosystem-light.
 
-The internal model is more general than the current file mutators. Aside from Moltark's own `.gitattributes` block and `.moltark/state.json`, only Python `pyproject.toml` surfaces are actually reconciled today. That is an intentional staging choice, not the intended final product shape.
+The internal model now supports generic JSON, TOML, and YAML structured-file reconciliation in addition to Python `pyproject.toml` ownership. What remains narrow is the ecosystem layer above those primitives: Python and `uv` are still the only first-party modules that compile richer capability relationships into those managed files. That is an intentional staging choice, not the intended final product shape.

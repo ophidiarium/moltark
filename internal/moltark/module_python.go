@@ -31,7 +31,18 @@ func (m *pythonModuleRuntime) BuildComponents(model DesiredModel) ([]ComponentSp
 			ID:              m.builder.nextComponentName(),
 			Kind:            ProjectKindPython,
 			Module:          ModuleSourcePython,
+			Version:         project.Python.TemplateVersion,
 			TargetProjectID: project.ID,
+			Facts: []FactProviderSpec{
+				{
+					Name:           FactLanguagePython,
+					ScopeProjectID: project.ID,
+					Values: map[string]any{
+						"requires_python": project.Python.RequiresPython,
+						"package_version": project.Python.Version,
+					},
+				},
+			},
 			Files: []StructuredFileSpec{
 				{
 					Path:             model.projectPyprojectPath(project),
@@ -93,7 +104,7 @@ func (m *pythonModuleRuntime) pythonProject(_ *starlark.Thread, _ *starlark.Buil
 		Python: &PythonProjectSpec{
 			Version:         version,
 			RequiresPython:  requiresPython,
-			TemplateVersion: TemplateVersion,
+			TemplateVersion: PythonTemplateVersion,
 			BuildSystem: BuildSystem{
 				Requires: []string{DefaultBuildRequirement},
 				Backend:  DefaultBuildBackend,

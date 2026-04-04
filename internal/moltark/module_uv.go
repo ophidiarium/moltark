@@ -151,6 +151,7 @@ func (m *uvModuleRuntime) buildUVWorkspaceComponent(model DesiredModel, decl uvW
 		ID:              m.builder.nextComponentName(),
 		Kind:            "uv_workspace",
 		Module:          ModuleSourceUV,
+		Version:         UVModuleVersion,
 		TargetProjectID: root.ID,
 		Providers:       providers,
 		RoutedIntents: []RoutedIntentSpec{

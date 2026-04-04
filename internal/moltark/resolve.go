@@ -10,8 +10,15 @@ type providerInstance struct {
 	provider    CapabilityProvider
 }
 
+type factInstance struct {
+	componentID string
+	fact        FactProviderSpec
+}
+
 func ResolveModel(model DesiredModel) (ResolvedModel, error) {
 	managedByPath := map[string]*ManagedFileSpec{}
+	facts := make([]factInstance, 0, len(model.Components))
+	publicFacts := []FactBinding{}
 	providers := make([]providerInstance, 0, len(model.Components))
 	publicProviders := []ProviderBinding{}
 	synthesisHooks := []ResolvedSynthesisHook{}
@@ -20,10 +27,17 @@ func ResolveModel(model DesiredModel) (ResolvedModel, error) {
 	taskSurfaces := []ResolvedTaskSurface{}
 
 	for _, component := range model.Components {
-		for _, file := range component.Files {
-			if err := mergeManagedFileIntent(managedByPath, component.ID, file); err != nil {
-				return ResolvedModel{}, err
-			}
+		for _, fact := range component.Facts {
+			facts = append(facts, factInstance{
+				componentID: component.ID,
+				fact:        fact,
+			})
+			publicFacts = append(publicFacts, FactBinding{
+				ComponentID:    component.ID,
+				Name:           fact.Name,
+				ScopeProjectID: fact.ScopeProjectID,
+				Values:         cloneNestedMap(fact.Values),
+			})
 		}
 		for _, provider := range component.Providers {
 			providers = append(providers, providerInstance{
@@ -92,6 +106,20 @@ func ResolveModel(model DesiredModel) (ResolvedModel, error) {
 				TargetProjectID:   surface.TargetProjectID,
 				TargetProjectPath: project.EffectivePath,
 			})
+		}
+	}
+
+	for _, component := range model.Components {
+		for _, file := range component.Files {
+			resolvedValues, err := resolveFactRefs(model, facts, file.DesiredValues, component.TargetProjectID)
+			if err != nil {
+				return ResolvedModel{}, fmt.Errorf("file intent %q: %w", component.ID, err)
+			}
+			resolvedFile := file
+			resolvedFile.DesiredValues = resolvedValues
+			if err := mergeManagedFileIntent(managedByPath, component.ID, component.Version, resolvedFile); err != nil {
+				return ResolvedModel{}, err
+			}
 		}
 	}
 
@@ -177,6 +205,15 @@ func ResolveModel(model DesiredModel) (ResolvedModel, error) {
 		}
 		return publicProviders[i].ComponentID < publicProviders[j].ComponentID
 	})
+	sort.Slice(publicFacts, func(i, j int) bool {
+		if publicFacts[i].Name != publicFacts[j].Name {
+			return publicFacts[i].Name < publicFacts[j].Name
+		}
+		if publicFacts[i].ScopeProjectID != publicFacts[j].ScopeProjectID {
+			return publicFacts[i].ScopeProjectID < publicFacts[j].ScopeProjectID
+		}
+		return publicFacts[i].ComponentID < publicFacts[j].ComponentID
+	})
 	sort.Slice(intentBindings, func(i, j int) bool {
 		if intentBindings[i].ComponentID != intentBindings[j].ComponentID {
 			return intentBindings[i].ComponentID < intentBindings[j].ComponentID
@@ -243,6 +280,7 @@ func ResolveModel(model DesiredModel) (ResolvedModel, error) {
 
 	return ResolvedModel{
 		ManagedFiles:            managedFiles,
+		Facts:                   publicFacts,
 		Providers:               publicProviders,
 		SynthesisHooks:          synthesisHooks,
 		BootstrapRequirements:   bootstrapRequirements,
@@ -253,16 +291,24 @@ func ResolveModel(model DesiredModel) (ResolvedModel, error) {
 	}, nil
 }
 
-func mergeManagedFileIntent(managedByPath map[string]*ManagedFileSpec, componentID string, file StructuredFileSpec) error {
+func mergeManagedFileIntent(managedByPath map[string]*ManagedFileSpec, componentID string, componentVersion string, file StructuredFileSpec) error {
 	current, ok := managedByPath[file.Path]
 	if !ok {
 		current = &ManagedFileSpec{
-			Path:             file.Path,
-			Format:           file.Format,
-			OwnedPaths:       append([]string(nil), file.OwnedPaths...),
-			UserManagedPaths: append([]string(nil), file.UserManagedPaths...),
-			DesiredValues:    cloneNestedMap(file.DesiredValues),
-			SourceComponents: []string{componentID},
+			Path:              file.Path,
+			Format:            file.Format,
+			OwnedPaths:        append([]string(nil), file.OwnedPaths...),
+			OwnedPathOwners:   map[string]string{},
+			OwnedPathVersions: map[string]string{},
+			UserManagedPaths:  append([]string(nil), file.UserManagedPaths...),
+			DesiredValues:     cloneNestedMap(file.DesiredValues),
+			SourceComponents:  []string{componentID},
+		}
+		for _, ownedPath := range file.OwnedPaths {
+			current.OwnedPathOwners[ownedPath] = componentID
+			if componentVersion != "" {
+				current.OwnedPathVersions[ownedPath] = componentVersion
+			}
 		}
 		managedByPath[file.Path] = current
 		return nil
@@ -273,12 +319,32 @@ func mergeManagedFileIntent(managedByPath map[string]*ManagedFileSpec, component
 	}
 
 	for _, ownedPath := range file.OwnedPaths {
-		value, _ := lookupPath(file.DesiredValues, ownedPath)
-		if existingValue, ok := lookupPath(current.DesiredValues, ownedPath); ok && fingerprintValue(existingValue, true) != fingerprintValue(value, true) {
-			return fmt.Errorf("file %q has conflicting desired values for %s", file.Path, ownedPath)
+		value, _ := lookupStructuredValue(file.DesiredValues, file.Format, ownedPath)
+		if existingOwner, ok := current.OwnedPathOwners[ownedPath]; ok && existingOwner != componentID {
+			return fmt.Errorf("file %q has conflicting ownership for %s from components %q and %q", file.Path, ownedPath, existingOwner, componentID)
 		}
-		setPathValue(current.DesiredValues, ownedPath, value)
+		if existingValue, ok := lookupStructuredValue(current.DesiredValues, current.Format, ownedPath); ok {
+			existingFingerprint, err := fingerprintValue(existingValue, true)
+			if err != nil {
+				return fmt.Errorf("file %q compare %s: %w", file.Path, ownedPath, err)
+			}
+			newFingerprint, err := fingerprintValue(value, true)
+			if err != nil {
+				return fmt.Errorf("file %q compare %s: %w", file.Path, ownedPath, err)
+			}
+			if existingFingerprint != newFingerprint {
+				return fmt.Errorf("file %q has conflicting desired values for %s", file.Path, ownedPath)
+			}
+		}
+		setStructuredValue(current.DesiredValues, current.Format, ownedPath, value)
 		current.OwnedPaths = append(current.OwnedPaths, ownedPath)
+		current.OwnedPathOwners[ownedPath] = componentID
+		if componentVersion != "" {
+			if existingVersion, ok := current.OwnedPathVersions[ownedPath]; ok && existingVersion != componentVersion {
+				return fmt.Errorf("file %q has conflicting template versions for %s", file.Path, ownedPath)
+			}
+			current.OwnedPathVersions[ownedPath] = componentVersion
+		}
 	}
 	current.UserManagedPaths = append(current.UserManagedPaths, file.UserManagedPaths...)
 	current.SourceComponents = append(current.SourceComponents, componentID)
@@ -321,6 +387,99 @@ func resolveCapabilityProvider(model DesiredModel, providers []providerInstance,
 	}
 
 	return providerInstance{}, fmt.Errorf("no provider for capability %q near project %q", capability, projectID)
+}
+
+func resolveFactProvider(model DesiredModel, facts []factInstance, name string, projectID string) (factInstance, error) {
+	scopeChain, err := projectScopeChain(model, projectID)
+	if err != nil {
+		return factInstance{}, err
+	}
+
+	for _, scopeProjectID := range scopeChain {
+		matches := []factInstance{}
+		for _, fact := range facts {
+			if fact.fact.Name == name && fact.fact.ScopeProjectID == scopeProjectID {
+				matches = append(matches, fact)
+			}
+		}
+		if len(matches) == 1 {
+			return matches[0], nil
+		}
+		if len(matches) > 1 {
+			return factInstance{}, fmt.Errorf("fact %q is ambiguous for project %q at scope %q", name, projectID, scopeProjectID)
+		}
+	}
+
+	globalMatches := []factInstance{}
+	for _, fact := range facts {
+		if fact.fact.Name == name && fact.fact.ScopeProjectID == "" {
+			globalMatches = append(globalMatches, fact)
+		}
+	}
+	if len(globalMatches) == 1 {
+		return globalMatches[0], nil
+	}
+	if len(globalMatches) > 1 {
+		return factInstance{}, fmt.Errorf("fact %q is ambiguous for project %q at global scope", name, projectID)
+	}
+
+	return factInstance{}, fmt.Errorf("no fact %q near project %q", name, projectID)
+}
+
+func resolveFactRefs(model DesiredModel, facts []factInstance, values map[string]any, defaultProjectID string) (map[string]any, error) {
+	resolved, err := resolveFactRefsValue(model, facts, values, defaultProjectID)
+	if err != nil {
+		return nil, err
+	}
+	root, ok := resolved.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("structured values must resolve to an object")
+	}
+	return root, nil
+}
+
+func resolveFactRefsValue(model DesiredModel, facts []factInstance, value any, defaultProjectID string) (any, error) {
+	switch typed := value.(type) {
+	case FactValueRef:
+		projectID := typed.TargetProjectID
+		if projectID == "" {
+			projectID = defaultProjectID
+		}
+		if projectID == "" {
+			return nil, fmt.Errorf("fact reference %q has no target project", typed.Name)
+		}
+		fact, err := resolveFactProvider(model, facts, typed.Name, projectID)
+		if err != nil {
+			return nil, err
+		}
+		resolved, ok := lookupStructuredValue(fact.fact.Values, FileFormatTOML, typed.Path)
+		if !ok {
+			return nil, fmt.Errorf("fact %q on component %q does not provide path %q", typed.Name, fact.componentID, typed.Path)
+		}
+		return cloneStructuredValue(resolved), nil
+	case map[string]any:
+		resolved := make(map[string]any, len(typed))
+		for key, nested := range typed {
+			value, err := resolveFactRefsValue(model, facts, nested, defaultProjectID)
+			if err != nil {
+				return nil, err
+			}
+			resolved[key] = value
+		}
+		return resolved, nil
+	case []any:
+		resolved := make([]any, 0, len(typed))
+		for _, nested := range typed {
+			value, err := resolveFactRefsValue(model, facts, nested, defaultProjectID)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, value)
+		}
+		return resolved, nil
+	default:
+		return value, nil
+	}
 }
 
 func projectScopeChain(model DesiredModel, projectID string) ([]string, error) {
@@ -368,11 +527,21 @@ func applyWorkspaceMembersIntent(managedByPath map[string]*ManagedFileSpec, comp
 	}
 
 	memberPaths := append([]string(nil), intent.Lists[IntentListMemberPaths]...)
-	if existingValue, ok := lookupPath(current.DesiredValues, ownedPath); ok && fingerprintValue(existingValue, true) != fingerprintValue(memberPaths, true) {
-		return fmt.Errorf("file %q has conflicting desired values for %s", filePath, ownedPath)
+	if existingValue, ok := lookupStructuredValue(current.DesiredValues, FileFormatTOML, ownedPath); ok {
+		existingFingerprint, err := fingerprintValue(existingValue, true)
+		if err != nil {
+			return fmt.Errorf("file %q compare %s: %w", filePath, ownedPath, err)
+		}
+		memberFingerprint, err := fingerprintValue(memberPaths, true)
+		if err != nil {
+			return fmt.Errorf("file %q compare %s: %w", filePath, ownedPath, err)
+		}
+		if existingFingerprint != memberFingerprint {
+			return fmt.Errorf("file %q has conflicting desired values for %s", filePath, ownedPath)
+		}
 	}
 
-	setPathValue(current.DesiredValues, ownedPath, memberPaths)
+	setStructuredValue(current.DesiredValues, FileFormatTOML, ownedPath, memberPaths)
 	current.OwnedPaths = append(current.OwnedPaths, ownedPath)
 	current.SourceComponents = append(current.SourceComponents, componentID, provider.componentID)
 	if current.Format == "" {
@@ -475,16 +644,30 @@ func requireProject(model DesiredModel, projectID string) (*ProjectSpec, error) 
 func cloneNestedMap(values map[string]any) map[string]any {
 	cloned := map[string]any{}
 	for key, value := range values {
-		switch typed := value.(type) {
-		case map[string]any:
-			cloned[key] = cloneNestedMap(typed)
-		case []string:
-			cloned[key] = append([]string(nil), typed...)
-		default:
-			cloned[key] = value
-		}
+		cloned[key] = cloneStructuredValue(value)
 	}
 	return cloned
+}
+
+func cloneSlice(values []any) []any {
+	cloned := make([]any, 0, len(values))
+	for _, value := range values {
+		cloned = append(cloned, cloneStructuredValue(value))
+	}
+	return cloned
+}
+
+func cloneStructuredValue(value any) any {
+	switch typed := value.(type) {
+	case map[string]any:
+		return cloneNestedMap(typed)
+	case []string:
+		return append([]string(nil), typed...)
+	case []any:
+		return cloneSlice(typed)
+	default:
+		return value
+	}
 }
 
 func cloneStringMap(values map[string]string) map[string]string {

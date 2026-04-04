@@ -148,6 +148,69 @@ func TestCoreTasksAndTriggerBindings(t *testing.T) {
 	))
 }
 
+func TestGoLintVscodeComponentOnly(t *testing.T) {
+	dir := testutil.CopyFixture(t, "go_lint_vscode_component")
+
+	planResult := testutil.RunCLI(t, dir, "", "plan")
+	applyResult := testutil.RunCLI(t, dir, "", "apply", "-auto-approve")
+	replanResult := testutil.RunCLI(t, dir, "", "plan")
+	showResult := testutil.RunCLI(t, dir, "", "show")
+
+	if planResult.ExitCode != 0 || applyResult.ExitCode != 0 || replanResult.ExitCode != 0 || showResult.ExitCode != 0 {
+		t.Fatalf("unexpected exit codes: plan=%d apply=%d replan=%d show=%d", planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode, showResult.ExitCode)
+	}
+
+	snaps.MatchSnapshot(t, renderSession(
+		testutil.RenderCommand("moltark plan", planResult),
+		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
+		testutil.RenderCommand("moltark plan", replanResult),
+		testutil.RenderCommand("moltark show", showResult),
+		testutil.RenderRepoState(t, dir),
+	))
+}
+
+func TestCoreStructuredFilePrimitives(t *testing.T) {
+	dir := testutil.CopyFixture(t, "core_structured_file_primitives")
+
+	planResult := testutil.RunCLI(t, dir, "", "plan")
+	applyResult := testutil.RunCLI(t, dir, "", "apply", "-auto-approve")
+	replanResult := testutil.RunCLI(t, dir, "", "plan")
+	showResult := testutil.RunCLI(t, dir, "", "show")
+
+	if planResult.ExitCode != 0 || applyResult.ExitCode != 0 || replanResult.ExitCode != 0 || showResult.ExitCode != 0 {
+		t.Fatalf("unexpected exit codes: plan=%d apply=%d replan=%d show=%d", planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode, showResult.ExitCode)
+	}
+
+	snaps.MatchSnapshot(t, renderSession(
+		testutil.RenderCommand("moltark plan", planResult),
+		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
+		testutil.RenderCommand("moltark plan", replanResult),
+		testutil.RenderCommand("moltark show", showResult),
+		testutil.RenderRepoState(t, dir),
+	))
+}
+
+func TestOpaqueRootProjectWithPythonChild(t *testing.T) {
+	dir := testutil.CopyFixture(t, "opaque_root_with_python_child")
+
+	planResult := testutil.RunCLI(t, dir, "", "plan")
+	applyResult := testutil.RunCLI(t, dir, "", "apply", "-auto-approve")
+	replanResult := testutil.RunCLI(t, dir, "", "plan")
+	showResult := testutil.RunCLI(t, dir, "", "show")
+
+	if planResult.ExitCode != 0 || applyResult.ExitCode != 0 || replanResult.ExitCode != 0 || showResult.ExitCode != 0 {
+		t.Fatalf("unexpected exit codes: plan=%d apply=%d replan=%d show=%d", planResult.ExitCode, applyResult.ExitCode, replanResult.ExitCode, showResult.ExitCode)
+	}
+
+	snaps.MatchSnapshot(t, renderSession(
+		testutil.RenderCommand("moltark plan", planResult),
+		testutil.RenderCommand("moltark apply -auto-approve", applyResult),
+		testutil.RenderCommand("moltark plan", replanResult),
+		testutil.RenderCommand("moltark show", showResult),
+		testutil.RenderRepoState(t, dir),
+	))
+}
+
 func renderSession(parts ...string) string {
 	return strings.Join(parts, "\n---\n")
 }

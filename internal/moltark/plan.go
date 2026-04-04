@@ -3,15 +3,22 @@ package moltark
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 )
 
-func classifyPath(file string, path string, desiredValue any, actualValue any, actualPresent bool, stateFile *ManagedFileState, state *State) Change {
-	desiredFingerprint := fingerprintValue(desiredValue, true)
-	actualFingerprint := fingerprintValue(actualValue, actualPresent)
-	displayDesired := renderDisplayValue(desiredValue, true)
-	displayActual := renderDisplayValue(actualValue, actualPresent)
+func classifyPath(format string, file string, path string, ownerComponentID string, desiredVersion string, desiredValue any, actualValue any, actualPresent bool, stateFile *ManagedFileState, state *State) (Change, error) {
+	desiredFingerprint, err := fingerprintValue(desiredValue, true)
+	if err != nil {
+		return Change{}, fmt.Errorf("fingerprint desired value for %s %s: %w", file, path, err)
+	}
+	actualFingerprint, err := fingerprintValue(actualValue, actualPresent)
+	if err != nil {
+		return Change{}, fmt.Errorf("fingerprint actual value for %s %s: %w", file, path, err)
+	}
+	displayDesired := renderDisplayValue(format, desiredValue, true)
+	displayActual := renderDisplayValue(format, actualValue, actualPresent)
 
-	if state == nil || stateFile == nil {
+	if state == nil {
 		if !actualPresent {
 			return Change{
 				Status:  ChangeCreate,
@@ -20,7 +27,7 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 				Reason:  ReasonBootstrap,
 				Summary: createSummary(path, displayDesired),
 				After:   displayDesired,
-			}
+			}, nil
 		}
 
 		if actualFingerprint == desiredFingerprint {
@@ -31,7 +38,7 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 				Reason:  ReasonAdoption,
 				Summary: noOpSummary(path),
 				After:   displayDesired,
-			}
+			}, nil
 		}
 
 		return Change{
@@ -42,12 +49,11 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 			Summary: conflictSummary(path, displayActual, displayDesired, true),
 			Before:  displayActual,
 			After:   displayDesired,
-		}
+		}, nil
 	}
 
-	lastFingerprint, tracked := stateFile.Fingerprints[path]
-	if !tracked {
-		reason := reasonForNewOwnedPath(state)
+	if stateFile == nil {
+		reason := reasonForNewOwnedPath(state, ownerComponentID, desiredVersion)
 		if !actualPresent {
 			return Change{
 				Status:  ChangeCreate,
@@ -56,7 +62,43 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 				Reason:  reason,
 				Summary: createSummary(path, displayDesired),
 				After:   displayDesired,
-			}
+			}, nil
+		}
+
+		if actualFingerprint == desiredFingerprint {
+			return Change{
+				Status:  ChangeNoOp,
+				File:    file,
+				Path:    path,
+				Reason:  reason,
+				Summary: noOpSummary(path),
+				After:   displayDesired,
+			}, nil
+		}
+
+		return Change{
+			Status:  ChangeConflict,
+			File:    file,
+			Path:    path,
+			Reason:  reason,
+			Summary: conflictSummary(path, displayActual, displayDesired, false),
+			Before:  displayActual,
+			After:   displayDesired,
+		}, nil
+	}
+
+	lastFingerprint, tracked := stateFile.Fingerprints[path]
+	if !tracked {
+		reason := reasonForNewOwnedPath(state, ownerComponentID, desiredVersion)
+		if !actualPresent {
+			return Change{
+				Status:  ChangeCreate,
+				File:    file,
+				Path:    path,
+				Reason:  reason,
+				Summary: createSummary(path, displayDesired),
+				After:   displayDesired,
+			}, nil
 		}
 		if actualFingerprint == desiredFingerprint {
 			return Change{
@@ -66,7 +108,7 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 				Reason:  reason,
 				Summary: noOpSummary(path),
 				After:   displayDesired,
-			}
+			}, nil
 		}
 		return Change{
 			Status:  ChangeConflict,
@@ -76,7 +118,7 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 			Summary: conflictSummary(path, displayActual, displayDesired, false),
 			Before:  displayActual,
 			After:   displayDesired,
-		}
+		}, nil
 	}
 
 	if actualFingerprint == desiredFingerprint {
@@ -84,10 +126,10 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 			Status:  ChangeNoOp,
 			File:    file,
 			Path:    path,
-			Reason:  reasonForDesiredChange(state, lastFingerprint, desiredFingerprint),
+			Reason:  reasonForDesiredChange(state, ownerComponentID, desiredVersion, lastFingerprint, desiredFingerprint),
 			Summary: noOpSummary(path),
 			After:   displayDesired,
-		}
+		}, nil
 	}
 
 	if actualFingerprint == lastFingerprint {
@@ -95,11 +137,11 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 			Status:  ChangeUpdate,
 			File:    file,
 			Path:    path,
-			Reason:  reasonForDesiredChange(state, lastFingerprint, desiredFingerprint),
+			Reason:  reasonForDesiredChange(state, ownerComponentID, desiredVersion, lastFingerprint, desiredFingerprint),
 			Summary: updateSummary(path, displayActual, displayDesired),
 			Before:  displayActual,
 			After:   displayDesired,
-		}
+		}, nil
 	}
 
 	if desiredFingerprint == lastFingerprint {
@@ -111,32 +153,40 @@ func classifyPath(file string, path string, desiredValue any, actualValue any, a
 			Summary: driftSummary(path, displayActual, displayDesired),
 			Before:  displayActual,
 			After:   displayDesired,
-		}
+		}, nil
 	}
 
 	return Change{
 		Status:  ChangeConflict,
 		File:    file,
 		Path:    path,
-		Reason:  reasonForDesiredChange(state, lastFingerprint, desiredFingerprint),
+		Reason:  reasonForDesiredChange(state, ownerComponentID, desiredVersion, lastFingerprint, desiredFingerprint),
 		Summary: conflictSummary(path, displayActual, displayDesired, false),
 		Before:  displayActual,
 		After:   displayDesired,
-	}
+	}, nil
 }
 
-func reasonForDesiredChange(state *State, lastFingerprint string, desiredFingerprint string) ChangeReason {
-	if state != nil && state.TemplateVersion != TemplateVersion && lastFingerprint != desiredFingerprint {
+func reasonForDesiredChange(state *State, ownerComponentID string, desiredVersion string, lastFingerprint string, desiredFingerprint string) ChangeReason {
+	if state != nil && componentVersionChanged(state, ownerComponentID, desiredVersion) && lastFingerprint != desiredFingerprint {
 		return ReasonTemplateUpgrade
 	}
 	return ReasonDesiredState
 }
 
-func reasonForNewOwnedPath(state *State) ChangeReason {
-	if state != nil && state.TemplateVersion != TemplateVersion {
+func reasonForNewOwnedPath(state *State, ownerComponentID string, desiredVersion string) ChangeReason {
+	if state != nil && componentVersionChanged(state, ownerComponentID, desiredVersion) {
 		return ReasonTemplateUpgrade
 	}
 	return ReasonDesiredState
+}
+
+func componentVersionChanged(state *State, ownerComponentID string, desiredVersion string) bool {
+	if state == nil || ownerComponentID == "" || desiredVersion == "" {
+		return false
+	}
+	lastVersion, ok := state.LastAppliedModel.componentVersion(ownerComponentID)
+	return ok && lastVersion != "" && lastVersion != desiredVersion
 }
 
 func stateManagedFile(state *State, path string) *ManagedFileState {
@@ -186,12 +236,17 @@ func compactChanges(changes []Change) []Change {
 	return compacted
 }
 
-func renderDisplayValue(value any, present bool) string {
+func renderDisplayValue(format string, value any, present bool) string {
 	if !present {
 		return "<absent>"
 	}
 
-	return renderTomlValue(value)
+	switch format {
+	case FileFormatJSON, FileFormatYAML:
+		return renderJSONValue(value)
+	default:
+		return renderTomlValue(value)
+	}
 }
 
 func createSummary(path string, after string) string {
@@ -290,16 +345,5 @@ func RenderDoctor(report DoctorReport) string {
 }
 
 func stringsJoin(lines []string, sep string) string {
-	return fmt.Sprintf("%s\n", joinStringSlice(lines, sep))
-}
-
-func joinStringSlice(lines []string, sep string) string {
-	if len(lines) == 0 {
-		return ""
-	}
-	out := lines[0]
-	for _, line := range lines[1:] {
-		out += sep + line
-	}
-	return out
+	return strings.Join(lines, sep) + "\n"
 }

@@ -9,21 +9,29 @@ const (
 	StateDirName            = ".moltark"
 	StateFileName           = "state.json"
 	SchemaVersion           = 1
-	TemplateVersion         = "python/v2"
+	PythonTemplateVersion   = "python/v2"
+	CoreModuleVersion       = "core/v1"
+	UVModuleVersion         = "astral/uv/v1"
 	DefaultProjectVersion   = "0.1.0"
 	DefaultRequiresPython   = ">=3.12"
 	DefaultBuildBackend     = "hatchling.build"
 	DefaultBuildRequirement = "hatchling"
 	FileFormatTOML          = "toml"
+	FileFormatJSON          = "json"
+	FileFormatYAML          = "yaml"
 
 	ModuleSourceCore   = "moltark/core"
 	ModuleSourcePython = "moltark/python"
 	ModuleSourceUV     = "astral/uv"
 
-	ProjectKindPython = "python_project"
+	ProjectKindGeneric = "project"
+	ProjectKindPython  = "python_project"
 
 	CapabilityPythonPackageManager   = "moltark.python.package_manager"
 	CapabilityPythonWorkspaceManager = "moltark.python.workspace_manager"
+
+	FactLanguagePython = "moltark.language.python"
+	FactLanguageGo     = "moltark.language.go"
 
 	IntentWorkspaceMembersRequest = "workspace_members_request"
 	IntentPythonDependencyRequest = "python_dependency_request"
