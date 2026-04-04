@@ -31,11 +31,16 @@ func FixturePath(name string) string {
 }
 
 func PrepareFixture(name string) (string, error) {
-	dir, err := os.MkdirTemp("", "moltark-fixture-*")
+	return prepareFixture(name, os.MkdirTemp, CopyDir, os.RemoveAll)
+}
+
+func prepareFixture(name string, mkTemp func(string, string) (string, error), copyDir func(string, string) error, removeAll func(string) error) (string, error) {
+	dir, err := mkTemp("", "moltark-fixture-*")
 	if err != nil {
 		return "", err
 	}
-	if err := CopyDir(FixturePath(name), dir); err != nil {
+	if err := copyDir(FixturePath(name), dir); err != nil {
+		_ = removeAll(dir)
 		return "", err
 	}
 	return dir, nil

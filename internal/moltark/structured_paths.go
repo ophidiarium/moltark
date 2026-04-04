@@ -21,6 +21,14 @@ func lookupStructuredValue(values map[string]any, format string, path string) (a
 	return current, true
 }
 
+func requireStructuredValue(values map[string]any, format string, path string) (any, error) {
+	value, ok := lookupStructuredValue(values, format, path)
+	if !ok {
+		return nil, fmt.Errorf("missing desired value for owned path %q", path)
+	}
+	return value, nil
+}
+
 func setStructuredValue(values map[string]any, format string, path string, value any) {
 	parts := structuredPathParts(format, path)
 	if len(parts) == 0 {
@@ -99,6 +107,9 @@ func inferOwnedPaths(format string, value any) ([]string, error) {
 		if !ok {
 			return nil, fmt.Errorf("toml file values must be an object")
 		}
+		if err := validateNoLiteralDotKeys(root, nil); err != nil {
+			return nil, err
+		}
 		return inferDottedOwnedPaths(root, nil), nil
 	default:
 		return nil, fmt.Errorf("unsupported file format %q", format)
@@ -147,4 +158,32 @@ func inferDottedOwnedPaths(value any, prefix []string) []string {
 		paths = append(paths, inferDottedOwnedPaths(nested, append(append([]string{}, prefix...), key))...)
 	}
 	return paths
+}
+
+func validateNoLiteralDotKeys(value any, prefix []string) error {
+	object, ok := value.(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	keys := make([]string, 0, len(object))
+	for key := range object {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		if strings.Contains(key, ".") {
+			location := "<root>"
+			if len(prefix) > 0 {
+				location = strings.Join(prefix, ".")
+			}
+			return fmt.Errorf("toml key %q under %s contains a literal dot; use nested maps for TOML paths", key, location)
+		}
+		if err := validateNoLiteralDotKeys(object[key], append(append([]string{}, prefix...), key)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

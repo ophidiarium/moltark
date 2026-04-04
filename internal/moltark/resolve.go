@@ -292,6 +292,12 @@ func ResolveModel(model DesiredModel) (ResolvedModel, error) {
 }
 
 func mergeManagedFileIntent(managedByPath map[string]*ManagedFileSpec, componentID string, componentVersion string, file StructuredFileSpec) error {
+	for _, ownedPath := range file.OwnedPaths {
+		if _, err := requireStructuredValue(file.DesiredValues, file.Format, ownedPath); err != nil {
+			return fmt.Errorf("file %q: %w", file.Path, err)
+		}
+	}
+
 	current, ok := managedByPath[file.Path]
 	if !ok {
 		current = &ManagedFileSpec{
@@ -319,7 +325,10 @@ func mergeManagedFileIntent(managedByPath map[string]*ManagedFileSpec, component
 	}
 
 	for _, ownedPath := range file.OwnedPaths {
-		value, _ := lookupStructuredValue(file.DesiredValues, file.Format, ownedPath)
+		value, err := requireStructuredValue(file.DesiredValues, file.Format, ownedPath)
+		if err != nil {
+			return fmt.Errorf("file %q: %w", file.Path, err)
+		}
 		if existingOwner, ok := current.OwnedPathOwners[ownedPath]; ok && existingOwner != componentID {
 			return fmt.Errorf("file %q has conflicting ownership for %s from components %q and %q", file.Path, ownedPath, existingOwner, componentID)
 		}
@@ -500,9 +509,10 @@ func projectScopeChain(model DesiredModel, projectID string) ([]string, error) {
 		if current.ParentID == "" {
 			break
 		}
-		current = model.projectByID(current.ParentID)
+		parentID := current.ParentID
+		current = model.projectByID(parentID)
 		if current == nil {
-			return nil, fmt.Errorf("project parent %q is not declared", project.ParentID)
+			return nil, fmt.Errorf("project parent %q is not declared", parentID)
 		}
 	}
 	return chain, nil
@@ -624,9 +634,10 @@ func projectWithinSubtree(model DesiredModel, candidateProjectID string, ancesto
 		if current.ParentID == "" {
 			return false, nil
 		}
-		current = model.projectByID(current.ParentID)
+		parentID := current.ParentID
+		current = model.projectByID(parentID)
 		if current == nil {
-			return false, fmt.Errorf("project parent %q is not declared", candidateProjectID)
+			return false, fmt.Errorf("project parent %q is not declared", parentID)
 		}
 	}
 

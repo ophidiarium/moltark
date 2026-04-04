@@ -60,7 +60,10 @@ func (Service) Plan(root string) (Plan, error) {
 
 		stateFile := stateManagedFile(plan.State, managedFile.Path)
 		for _, ownedPath := range managedFile.OwnedPaths {
-			desiredValue, _ := lookupStructuredValue(managedFile.DesiredValues, managedFile.Format, ownedPath)
+			desiredValue, err := requireStructuredValue(managedFile.DesiredValues, managedFile.Format, ownedPath)
+			if err != nil {
+				return Plan{}, fmt.Errorf("plan %s %s: %w", managedFile.Path, ownedPath, err)
+			}
 			actualValue, actualPresent := lookupStructuredValue(doc.Values, managedFile.Format, ownedPath)
 			ownerComponentID := managedFile.OwnedPathOwners[ownedPath]
 			desiredVersion := managedFile.OwnedPathVersions[ownedPath]

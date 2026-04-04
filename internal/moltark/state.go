@@ -81,7 +81,10 @@ func buildState(model DesiredModel, resolved ResolvedModel) (State, error) {
 		fingerprints := make(map[string]string, len(file.OwnedPaths))
 		versions := make(map[string]string, len(file.OwnedPaths))
 		for _, ownedPath := range file.OwnedPaths {
-			value, _ := lookupStructuredValue(file.DesiredValues, file.Format, ownedPath)
+			value, err := requireStructuredValue(file.DesiredValues, file.Format, ownedPath)
+			if err != nil {
+				return State{}, fmt.Errorf("build state for %s %s: %w", file.Path, ownedPath, err)
+			}
 			fingerprint, err := fingerprintValue(value, true)
 			if err != nil {
 				return State{}, fmt.Errorf("build state for %s %s: %w", file.Path, ownedPath, err)

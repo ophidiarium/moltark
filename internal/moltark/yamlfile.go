@@ -28,7 +28,10 @@ func mutateYAMLFile(raw string, desiredValues map[string]any, ownedPaths []strin
 	}
 
 	for _, ownedPath := range ownedPaths {
-		value, _ := lookupStructuredValue(desiredValues, FileFormatYAML, ownedPath)
+		value, err := requireStructuredValue(desiredValues, FileFormatYAML, ownedPath)
+		if err != nil {
+			return "", err
+		}
 		setStructuredValue(values, FileFormatYAML, ownedPath, value)
 	}
 

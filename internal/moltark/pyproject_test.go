@@ -47,6 +47,18 @@ func TestMutateTOMLFileSupportsRootLevelKeys(t *testing.T) {
 	}
 }
 
+func TestMutateTOMLFileRejectsMissingOwnedPaths(t *testing.T) {
+	_, err := mutateTOMLFile("", map[string]any{
+		"tool": map[string]any{},
+	}, []string{"tool.moltark.schema-version"})
+	if err == nil {
+		t.Fatal("expected missing owned path to fail")
+	}
+	if !strings.Contains(err.Error(), `missing desired value for owned path "tool.moltark.schema-version"`) {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestRenderTomlValueRendersValidInlineTables(t *testing.T) {
 	rendered := renderTomlValue(map[string]any{
 		"enabled": true,

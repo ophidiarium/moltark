@@ -2,6 +2,7 @@ package moltark
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -44,5 +45,19 @@ func TestInferOwnedPathsForYAMLUsesJSONPointers(t *testing.T) {
 	want := []string{"/docs/changed-files/any-glob-to-any-file"}
 	if !reflect.DeepEqual(paths, want) {
 		t.Fatalf("unexpected paths: got %#v want %#v", paths, want)
+	}
+}
+
+func TestInferOwnedPathsForTOMLRejectsLiteralDotKeys(t *testing.T) {
+	_, err := inferOwnedPaths(FileFormatTOML, map[string]any{
+		"tool.ruff": map[string]any{
+			"line-length": 100,
+		},
+	})
+	if err == nil {
+		t.Fatal("expected dotted TOML keys to be rejected")
+	}
+	if !strings.Contains(err.Error(), `toml key "tool.ruff"`) {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

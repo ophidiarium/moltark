@@ -27,7 +27,10 @@ func mutateJSONFile(raw string, desiredValues map[string]any, ownedPaths []strin
 	}
 
 	for _, ownedPath := range ownedPaths {
-		value, _ := lookupStructuredValue(desiredValues, FileFormatJSON, ownedPath)
+		value, err := requireStructuredValue(desiredValues, FileFormatJSON, ownedPath)
+		if err != nil {
+			return "", err
+		}
 		setStructuredValue(values, FileFormatJSON, ownedPath, value)
 	}
 

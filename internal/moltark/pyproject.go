@@ -73,13 +73,16 @@ func setPathValue(values map[string]any, path string, value any) {
 
 func mutateTOMLFile(raw string, desiredValues map[string]any, ownedPaths []string) (string, error) {
 	if strings.TrimSpace(raw) == "" {
-		return renderTOMLFile(desiredValues, ownedPaths), nil
+		return renderTOMLFile(desiredValues, ownedPaths)
 	}
 
 	updates := make([]tomlUpdate, 0, len(ownedPaths))
 	for _, ownedPath := range ownedPaths {
 		table, key := splitOwnedPath(ownedPath)
-		value, _ := lookupPath(desiredValues, ownedPath)
+		value, err := requireStructuredValue(desiredValues, FileFormatTOML, ownedPath)
+		if err != nil {
+			return "", err
+		}
 		updates = append(updates, tomlUpdate{
 			Table: table,
 			Key:   key,
@@ -99,7 +102,7 @@ func mutateTOMLFile(raw string, desiredValues map[string]any, ownedPaths []strin
 	return ensureTrailingNewline(out), nil
 }
 
-func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) string {
+func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) (string, error) {
 	sections := map[string][]string{}
 	rootKeys := []string{}
 	tableOrder := []string{}
@@ -120,7 +123,10 @@ func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) string {
 	}
 	lines := []string{}
 	for _, key := range rootKeys {
-		value, _ := lookupPath(desiredValues, key)
+		value, err := requireStructuredValue(desiredValues, FileFormatTOML, key)
+		if err != nil {
+			return "", err
+		}
 		lines = append(lines, fmt.Sprintf("%s = %s", key, renderTomlValue(value)))
 	}
 	for _, table := range tableOrder {
@@ -131,12 +137,15 @@ func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) string {
 		lines = append(lines, "["+table+"]")
 		for _, key := range keys {
 			ownedPath := table + "." + key
-			value, _ := lookupPath(desiredValues, ownedPath)
+			value, err := requireStructuredValue(desiredValues, FileFormatTOML, ownedPath)
+			if err != nil {
+				return "", err
+			}
 			lines = append(lines, fmt.Sprintf("%s = %s", key, renderTomlValue(value)))
 		}
 	}
 
-	return strings.Join(lines, "\n") + "\n"
+	return strings.Join(lines, "\n") + "\n", nil
 }
 
 type tomlUpdate struct {
