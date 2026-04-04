@@ -128,6 +128,11 @@ func CopyDir(src string, dst string) error {
 			return err
 		}
 
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+
 		rel, err := filepath.Rel(src, path)
 		if err != nil {
 			return err
@@ -148,7 +153,7 @@ func CopyDir(src string, dst string) error {
 		}
 		defer in.Close()
 
-		out, err := os.Create(target)
+		out, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, info.Mode().Perm())
 		if err != nil {
 			return err
 		}
