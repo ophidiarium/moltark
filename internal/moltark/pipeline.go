@@ -16,7 +16,7 @@ func (s Service) BuildPipeline(root string) (Pipeline, error) {
 		return Pipeline{}, err
 	}
 
-	inspect, docs, stateRaw, gitattributesRaw, err := inspectPhase(root, resolve)
+	inspection, err := inspectPhase(root, resolve)
 	if err != nil {
 		return Pipeline{}, err
 	}
@@ -26,7 +26,7 @@ func (s Service) BuildPipeline(root string) (Pipeline, error) {
 		return Pipeline{}, err
 	}
 
-	plan, err := planningPhase(resolve, inspect, persist, docs, stateRaw, nextStateRaw, gitattributesRaw)
+	plan, err := planningPhase(resolve, inspection.Phase, persist, inspection.FileDocs, inspection.StateRaw, nextStateRaw, inspection.GitattributesRaw)
 	if err != nil {
 		return Pipeline{}, err
 	}
@@ -35,13 +35,13 @@ func (s Service) BuildPipeline(root string) (Pipeline, error) {
 		Root:             root,
 		Evaluate:         evaluate,
 		Resolve:          resolve,
-		Inspect:          inspect,
+		Inspect:          inspection.Phase,
 		Persist:          persist,
 		Plan:             plan,
-		fileDocs:         docs,
-		stateRaw:         stateRaw,
+		fileDocs:         inspection.FileDocs,
+		stateRaw:         inspection.StateRaw,
 		nextStateRaw:     nextStateRaw,
-		gitattributesRaw: gitattributesRaw,
+		gitattributesRaw: inspection.GitattributesRaw,
 	}, nil
 }
 
@@ -71,7 +71,14 @@ func resolvePhase(evaluate EvaluationPhase) (ResolutionPhase, error) {
 	return ResolutionPhase{Resolved: resolved}, nil
 }
 
-func inspectPhase(root string, resolve ResolutionPhase) (InspectionPhase, map[string]fileDocument, string, string, error) {
+type inspectionResult struct {
+	Phase            InspectionPhase
+	FileDocs         map[string]fileDocument
+	StateRaw         string
+	GitattributesRaw string
+}
+
+func inspectPhase(root string, resolve ResolutionPhase) (inspectionResult, error) {
 	fileDocs := make(map[string]fileDocument, len(resolve.Resolved.ManagedFiles))
 	phase := InspectionPhase{
 		StateFile:       filepath.ToSlash(filepath.Join(StateDirName, StateFileName)),
@@ -80,19 +87,19 @@ func inspectPhase(root string, resolve ResolutionPhase) (InspectionPhase, map[st
 
 	gitattributesRaw, gitattributesExists, err := readOptionalFile(filepath.Join(root, GitattributesFileName))
 	if err != nil {
-		return InspectionPhase{}, nil, "", "", err
+		return inspectionResult{}, err
 	}
 
 	stateDoc, err := loadState(root)
 	if err != nil {
-		return InspectionPhase{}, nil, "", "", err
+		return inspectionResult{}, err
 	}
 	phase.CurrentState = stateDoc.State
 
 	for _, managedFile := range resolve.Resolved.ManagedFiles {
 		doc, err := loadStructuredDocument(filepath.Join(root, managedFile.Path), managedFile.Format)
 		if err != nil {
-			return InspectionPhase{}, nil, "", "", fmt.Errorf("load %s: %w", managedFile.Path, err)
+			return inspectionResult{}, fmt.Errorf("load %s: %w", managedFile.Path, err)
 		}
 		fileDocs[managedFile.Path] = doc
 
@@ -134,7 +141,12 @@ func inspectPhase(root string, resolve ResolutionPhase) (InspectionPhase, map[st
 		ManagedBlock: renderDisplayValue(FileFormatTOML, block, ok),
 	}
 
-	return phase, fileDocs, stateDoc.Raw, gitattributesRaw, nil
+	return inspectionResult{
+		Phase:            phase,
+		FileDocs:         fileDocs,
+		StateRaw:         stateDoc.Raw,
+		GitattributesRaw: gitattributesRaw,
+	}, nil
 }
 
 func persistPhase(evaluate EvaluationPhase, resolve ResolutionPhase) (PersistPhase, string, error) {
