@@ -2,6 +2,7 @@ package command
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/ophidiarium/moltark/internal/moltark"
 )
@@ -29,13 +30,13 @@ func (c *InitCommand) Run(args []string) int {
 }
 
 func (c *InitCommand) Help() string {
-	return `Usage: moltark init
+	return fmt.Sprintf(`Usage: moltark init
 
   Initialize Moltark in the current repository by creating a minimal
-  molt.star when one does not already exist.
+  %s when one does not already exist.
 
   This command does not reconcile pyproject.toml. Run "moltark plan"
-  and "moltark apply" after initialization.`
+  and "moltark apply" after initialization.`, moltark.ProjectSpecFileName)
 }
 
 func (c *InitCommand) Synopsis() string {
