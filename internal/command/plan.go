@@ -2,6 +2,7 @@ package command
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/ophidiarium/moltark/internal/moltark"
 )
@@ -39,16 +40,16 @@ func (c *PlanCommand) Run(args []string) int {
 }
 
 func (c *PlanCommand) Help() string {
-	return `Usage: moltark plan [options]
+	return fmt.Sprintf(`Usage: moltark plan [options]
 
-  Compare the Moltarkfile desired state with the current repository and
+  Compare the %s desired state with the current repository and
   show the planned file updates without writing them.
 
 Options:
 
-  -detailed-exitcode    Return 2 when changes are planned.`
+  -detailed-exitcode    Return 2 when changes are planned.`, moltark.ProjectSpecFileName)
 }
 
 func (c *PlanCommand) Synopsis() string {
-	return "Show repository changes required by the Moltarkfile"
+	return fmt.Sprintf("Show repository changes required by %s", moltark.ProjectSpecFileName)
 }

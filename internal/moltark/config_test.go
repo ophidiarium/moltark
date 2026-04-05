@@ -17,8 +17,8 @@ python.python_project(
     requires_python = ">=3.12",
 )
 `
-	if err := os.WriteFile(filepath.Join(root, MoltarkfileName), []byte(content), 0o644); err != nil {
-		t.Fatalf("write Moltarkfile: %v", err)
+	if err := os.WriteFile(filepath.Join(root, ProjectSpecFileName), []byte(content), 0o644); err != nil {
+		t.Fatalf("write %s: %v", ProjectSpecFileName, err)
 	}
 
 	_, err := LoadDesiredModel(root)

@@ -155,7 +155,7 @@ That gives Gazelle:
 
 Moltark should copy the explicitness, not necessarily the exact mechanism. For Moltark, the analogue is:
 
-- explicit module imports in `Moltarkfile`
+- explicit module imports in `molt.star`
 - explicit capability/fact contribution contracts
 - deterministic module resolution and ordering
 
@@ -170,7 +170,7 @@ Gazelle leans heavily on directives such as:
 
 These are powerful because they travel with the file graph they affect.
 
-This is not a direct fit for Moltark, because Moltark already has `Moltarkfile` and state. But the broader pattern is transferable:
+This is not a direct fit for Moltark, because Moltark already has `molt.star` and state. But the broader pattern is transferable:
 
 - local override points are valuable
 - the closer the override is to the surface it affects, the more understandable the system is
@@ -300,7 +300,7 @@ Gazelle's strongest document is arguably [`how-gazelle-works.md`](https://github
 
 For Moltark, the analogous lifecycle should stay explicit:
 
-1. Evaluate modules and `Moltarkfile`
+1. Evaluate modules and `molt.star`
 2. Build desired project/component model
 3. Inspect current repo state
 4. Resolve providers, facts, and ownership surfaces

@@ -4,7 +4,7 @@ Moltark is a reconciler, not a one-shot generator.
 
 The current system now exposes explicit engine phases:
 
-1. `evaluate`: load `Moltarkfile` into a desired in-memory model.
+1. `evaluate`: load `molt.star` into a desired in-memory model.
 2. `resolve`: turn module-provided files, facts, providers, and routed intents into a concrete reconciled model.
 3. `inspect`: read the current repository surfaces Moltark cares about.
 4. `persist`: compute the candidate next `.moltark/state.json`.
