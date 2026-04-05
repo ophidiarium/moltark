@@ -11,10 +11,10 @@ import (
 )
 
 func LoadDesiredModel(root string) (DesiredModel, error) {
-	path := filepath.Join(root, MoltarkfileName)
+	path := filepath.Join(root, ProjectSpecFileName)
 	src, err := os.ReadFile(path)
 	if err != nil {
-		return DesiredModel{}, fmt.Errorf("read %s: %w", MoltarkfileName, err)
+		return DesiredModel{}, fmt.Errorf("read %s: %w", ProjectSpecFileName, err)
 	}
 
 	builder := newDesiredModelBuilder()
@@ -22,20 +22,20 @@ func LoadDesiredModel(root string) (DesiredModel, error) {
 		"use": starlark.NewBuiltin("use", builder.useModule),
 	}
 
-	thread := &starlark.Thread{Name: MoltarkfileName}
-	if _, err := starlark.ExecFile(thread, MoltarkfileName, src, globals); err != nil {
-		return DesiredModel{}, fmt.Errorf("evaluate %s: %w", MoltarkfileName, err)
+	thread := &starlark.Thread{Name: ProjectSpecFileName}
+	if _, err := starlark.ExecFile(thread, ProjectSpecFileName, src, globals); err != nil {
+		return DesiredModel{}, fmt.Errorf("evaluate %s: %w", ProjectSpecFileName, err)
 	}
 
 	return builder.build()
 }
 
 func InitRepository(root string) (string, error) {
-	path := filepath.Join(root, MoltarkfileName)
+	path := filepath.Join(root, ProjectSpecFileName)
 	if _, err := os.Stat(path); err == nil {
-		return fmt.Sprintf("%s already exists. No changes made.", MoltarkfileName), nil
+		return fmt.Sprintf("%s already exists. No changes made.", ProjectSpecFileName), nil
 	} else if !os.IsNotExist(err) {
-		return "", fmt.Errorf("stat %s: %w", MoltarkfileName, err)
+		return "", fmt.Errorf("stat %s: %w", ProjectSpecFileName, err)
 	}
 
 	name := filepath.Base(root)
@@ -74,10 +74,10 @@ func InitRepository(root string) (string, error) {
 	)
 
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-		return "", fmt.Errorf("write %s: %w", MoltarkfileName, err)
+		return "", fmt.Errorf("write %s: %w", ProjectSpecFileName, err)
 	}
 
-	return fmt.Sprintf("Created %s. Run `moltark plan` to inspect the initial reconciliation.", MoltarkfileName), nil
+	return fmt.Sprintf("Created %s. Run `moltark plan` to inspect the initial reconciliation.", ProjectSpecFileName), nil
 }
 
 type desiredModelBuilder struct {
@@ -122,7 +122,7 @@ func (b *desiredModelBuilder) useModule(_ *starlark.Thread, _ *starlark.Builtin,
 
 func (b *desiredModelBuilder) build() (DesiredModel, error) {
 	if len(b.projects) == 0 {
-		return DesiredModel{}, fmt.Errorf("%s did not declare any projects", MoltarkfileName)
+		return DesiredModel{}, fmt.Errorf("%s did not declare any projects", ProjectSpecFileName)
 	}
 
 	model := DesiredModel{

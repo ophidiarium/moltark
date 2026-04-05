@@ -3,7 +3,10 @@ package moltark
 import "path/filepath"
 
 const (
-	MoltarkfileName         = "molt.star"
+	// ProjectSpecFileName is the Starlark file at the repository root that
+	// declares the desired model: projects, components, and module imports.
+	// See docs/concepts/01-core-concepts.md for the evaluation pipeline.
+	ProjectSpecFileName     = "molt.star"
 	PyprojectFileName       = "pyproject.toml"
 	GitattributesFileName   = ".gitattributes"
 	StateDirName            = ".moltark"

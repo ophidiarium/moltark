@@ -99,7 +99,7 @@ func RenderRepoState(t *testing.T, root string) string {
 	t.Helper()
 
 	paths := []string{
-		moltark.MoltarkfileName,
+		moltark.ProjectSpecFileName,
 		".gitattributes",
 		".moltark/state.json",
 	}
