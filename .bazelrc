@@ -1,0 +1,3 @@
+# Coverage: instrument source packages only (explicit to avoid matching external deps)
+coverage --combined_report=lcov
+coverage --instrumentation_filter=//internal/moltark,//internal/cliapp,//internal/command
