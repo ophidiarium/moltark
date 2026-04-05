@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	github.com/cucumber/godog v0.15.1
 	github.com/gkampitakis/go-snaps v0.5.21
-	github.com/goccy/go-yaml v1.18.0
+	github.com/goccy/go-yaml v1.19.2
 	github.com/mitchellh/cli v1.1.5
 	github.com/pelletier/go-toml/v2 v2.3.0
 	go.starlark.net v0.0.0-20251029211736-7849196f18cf
