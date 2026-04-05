@@ -5,10 +5,10 @@ go 1.26.0
 require (
 	github.com/cucumber/godog v0.15.1
 	github.com/gkampitakis/go-snaps v0.5.21
-	github.com/goccy/go-yaml v1.18.0
 	github.com/mitchellh/cli v1.1.5
 	github.com/pelletier/go-toml/v2 v2.3.0
 	go.starlark.net v0.0.0-20251029211736-7849196f18cf
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -21,6 +21,7 @@ require (
 	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/gkampitakis/ciinfo v0.3.2 // indirect
+	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect

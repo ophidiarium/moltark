@@ -8,17 +8,17 @@ Moltark is a project templater powered by Starlark that supports long-term templ
 
 ## Build and Test Commands
 
-Use `bazelisk` (not bare `bazel`) so the version pinned in `.bazelversion` is used.
+Use `bazelisk` (not bare `bazel`) as the primary build and test runner so the version pinned in `.bazelversion` is used. Always verify changes with `bazelisk` before pushing — CI runs Bazel, not bare `go test`.
 
 ```bash
-# Build
-go build ./cmd/moltark              # Go build
-bazelisk build //:moltark           # Bazel build
+# Build (prefer bazelisk)
+bazelisk build //:moltark           # Bazel build (CI-authoritative)
+go build ./cmd/moltark              # Go build (quick local check)
 
-# Test
+# Test (prefer bazelisk)
+bazelisk test //...                  # Full Bazel suite (CI-authoritative)
 go test ./...                        # Full Go suite
 go test -count=1 ./...               # Full suite (no cache)
-bazelisk test //...                  # Full Bazel suite
 go test -count=1 ./internal/moltark/...   # Core package tests
 go test -count=1 ./tests/integration/...  # Integration tests only
 go test -count=1 ./tests/features/...     # Gherkin feature tests only
@@ -26,8 +26,10 @@ go test -count=1 ./tests/features/...     # Gherkin feature tests only
 # Refresh integration snapshots
 UPDATE_SNAPS=true go test -count=1 ./tests/integration/...
 
-# Regenerate BUILD.bazel files
-bazelisk run //:gazelle
+# Dependency management
+# After changing go.mod (adding/removing/switching deps):
+bazelisk run //:gazelle              # Regenerate BUILD.bazel files
+bazelisk mod tidy                    # Update MODULE.bazel use_repo directives
 
 # Lint (CI checks)
 gofmt -l .                           # Format check

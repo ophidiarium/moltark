@@ -6010,12 +6010,12 @@ core.yaml_file(
 docs:
   changed-files:
     any-glob-to-any-file:
-    - docs/**
-    - README.md
+      - docs/**
+      - README.md
 go:
   changed-files:
     any-glob-to-any-file:
-    - "**/*.go"
+      - '**/*.go'
 
 == .vscode/settings.json ==
 {

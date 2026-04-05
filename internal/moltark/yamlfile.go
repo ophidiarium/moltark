@@ -3,7 +3,7 @@ package moltark
 import (
 	"bytes"
 
-	yaml "github.com/goccy/go-yaml"
+	"gopkg.in/yaml.v3"
 )
 
 func parseYAMLValues(raw []byte) (map[string]any, error) {
@@ -39,9 +39,14 @@ func mutateYAMLFile(raw string, desiredValues map[string]any, ownedPaths []strin
 }
 
 func renderYAMLFile(values map[string]any) (string, error) {
-	encoded, err := yaml.Marshal(values)
-	if err != nil {
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+	if err := enc.Encode(values); err != nil {
 		return "", err
 	}
-	return ensureTrailingNewline(string(encoded)), nil
+	if err := enc.Close(); err != nil {
+		return "", err
+	}
+	return ensureTrailingNewline(buf.String()), nil
 }
