@@ -245,7 +245,11 @@ func renderDisplayValue(format string, value any, present bool) string {
 	case FileFormatJSON, FileFormatYAML:
 		return renderJSONValue(value)
 	default:
-		return renderTomlValue(value)
+		rendered, err := renderTomlValue(value)
+		if err != nil {
+			return fmt.Sprintf("<render error: %v>", err)
+		}
+		return rendered
 	}
 }
 

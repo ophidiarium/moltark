@@ -26,10 +26,14 @@ func mutateTOMLFile(raw string, desiredValues map[string]any, ownedPaths []strin
 		if err != nil {
 			return "", err
 		}
+		rendered, err := renderTomlValue(value)
+		if err != nil {
+			return "", fmt.Errorf("render %s: %w", ownedPath, err)
+		}
 		updates = append(updates, tomlUpdate{
 			Table: table,
 			Key:   key,
-			Value: renderTomlValue(value),
+			Value: rendered,
 		})
 	}
 
@@ -70,7 +74,11 @@ func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) (string, 
 		if err != nil {
 			return "", err
 		}
-		lines = append(lines, fmt.Sprintf("%s = %s", key, renderTomlValue(value)))
+		rendered, err := renderTomlValue(value)
+		if err != nil {
+			return "", fmt.Errorf("render %s: %w", key, err)
+		}
+		lines = append(lines, fmt.Sprintf("%s = %s", key, rendered))
 	}
 	for _, table := range tableOrder {
 		keys := sections[table]
@@ -84,7 +92,11 @@ func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) (string, 
 			if err != nil {
 				return "", err
 			}
-			lines = append(lines, fmt.Sprintf("%s = %s", key, renderTomlValue(value)))
+			rendered, err := renderTomlValue(value)
+			if err != nil {
+				return "", fmt.Errorf("render %s: %w", ownedPath, err)
+			}
+			lines = append(lines, fmt.Sprintf("%s = %s", key, rendered))
 		}
 	}
 
@@ -114,36 +126,40 @@ func containsString(values []string, target string) bool {
 	return false
 }
 
-func renderTomlValue(value any) string {
+func renderTomlValue(value any) (string, error) {
 	switch typed := value.(type) {
 	case nil:
-		return `""`
+		return `""`, nil
 	case string:
-		return strconv.Quote(typed)
+		return strconv.Quote(typed), nil
 	case bool:
-		return strconv.FormatBool(typed)
+		return strconv.FormatBool(typed), nil
 	case int:
-		return strconv.Itoa(typed)
+		return strconv.Itoa(typed), nil
 	case int8, int16, int32, int64:
-		return strconv.FormatInt(reflect.ValueOf(typed).Int(), 10)
+		return strconv.FormatInt(reflect.ValueOf(typed).Int(), 10), nil
 	case uint, uint8, uint16, uint32, uint64, uintptr:
-		return strconv.FormatUint(reflect.ValueOf(typed).Uint(), 10)
+		return strconv.FormatUint(reflect.ValueOf(typed).Uint(), 10), nil
 	case float32:
-		return strconv.FormatFloat(float64(typed), 'f', -1, 32)
+		return strconv.FormatFloat(float64(typed), 'f', -1, 32), nil
 	case float64:
-		return strconv.FormatFloat(typed, 'f', -1, 64)
+		return strconv.FormatFloat(typed, 'f', -1, 64), nil
 	case []string:
 		items := make([]string, 0, len(typed))
 		for _, item := range typed {
 			items = append(items, strconv.Quote(item))
 		}
-		return "[" + strings.Join(items, ", ") + "]"
+		return "[" + strings.Join(items, ", ") + "]", nil
 	case []any:
 		items := make([]string, 0, len(typed))
 		for _, item := range typed {
-			items = append(items, renderTomlValue(item))
+			rendered, err := renderTomlValue(item)
+			if err != nil {
+				return "", err
+			}
+			items = append(items, rendered)
 		}
-		return "[" + strings.Join(items, ", ") + "]"
+		return "[" + strings.Join(items, ", ") + "]", nil
 	case map[string]any:
 		return renderTomlInlineTable(typed)
 	case map[string]string:
@@ -159,9 +175,13 @@ func renderTomlValue(value any) string {
 	case reflect.Slice, reflect.Array:
 		items := make([]string, 0, valueRef.Len())
 		for i := 0; i < valueRef.Len(); i++ {
-			items = append(items, renderTomlValue(valueRef.Index(i).Interface()))
+			rendered, err := renderTomlValue(valueRef.Index(i).Interface())
+			if err != nil {
+				return "", err
+			}
+			items = append(items, rendered)
 		}
-		return "[" + strings.Join(items, ", ") + "]"
+		return "[" + strings.Join(items, ", ") + "]", nil
 	case reflect.Map:
 		if valueRef.Type().Key().Kind() == reflect.String {
 			items := make(map[string]any, valueRef.Len())
@@ -173,10 +193,10 @@ func renderTomlValue(value any) string {
 		}
 	}
 
-	return strconv.Quote(fmt.Sprint(value))
+	return "", fmt.Errorf("unsupported TOML value type %T", value)
 }
 
-func renderTomlInlineTable(values map[string]any) string {
+func renderTomlInlineTable(values map[string]any) (string, error) {
 	keys := make([]string, 0, len(values))
 	for key := range values {
 		keys = append(keys, key)
@@ -185,9 +205,13 @@ func renderTomlInlineTable(values map[string]any) string {
 
 	items := make([]string, 0, len(keys))
 	for _, key := range keys {
-		items = append(items, fmt.Sprintf("%s = %s", key, renderTomlValue(values[key])))
+		rendered, err := renderTomlValue(values[key])
+		if err != nil {
+			return "", err
+		}
+		items = append(items, fmt.Sprintf("%s = %s", key, rendered))
 	}
-	return "{ " + strings.Join(items, ", ") + " }"
+	return "{ " + strings.Join(items, ", ") + " }", nil
 }
 
 func upsertTomlKey(raw string, table string, key string, value string) (string, error) {

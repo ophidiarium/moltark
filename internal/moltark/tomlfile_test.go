@@ -146,13 +146,27 @@ name = "real"
 }
 
 func TestRenderTomlValueRendersValidInlineTables(t *testing.T) {
-	rendered := renderTomlValue(map[string]any{
+	rendered, err := renderTomlValue(map[string]any{
 		"enabled": true,
 		"tool":    "uv",
 	})
+	if err != nil {
+		t.Fatalf("renderTomlValue: %v", err)
+	}
 
 	values := map[string]any{}
 	if err := toml.Unmarshal([]byte("value = "+rendered+"\n"), &values); err != nil {
 		t.Fatalf("rendered value must be valid TOML: %v", err)
+	}
+}
+
+func TestRenderTomlValueRejectsUnsupportedTypes(t *testing.T) {
+	type custom struct{ X int }
+	_, err := renderTomlValue(custom{X: 1})
+	if err == nil {
+		t.Fatal("expected error for unsupported type")
+	}
+	if !strings.Contains(err.Error(), "unsupported TOML value type") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
