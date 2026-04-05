@@ -3,6 +3,7 @@ package moltark
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -230,7 +231,7 @@ func upsertTomlKey(raw string, table string, key string, value string) (string, 
 			return joinLines(lines, newline), nil
 		}
 
-		lines = append(lines[:keyStart], append([]string{keyLine}, lines[keyEnd:]...)...)
+		lines = slices.Concat(lines[:keyStart], []string{keyLine}, lines[keyEnd:])
 		return joinLines(lines, newline), nil
 	}
 	start, end := findTable(lines, table, mask)
@@ -258,7 +259,7 @@ func upsertTomlKey(raw string, table string, key string, value string) (string, 
 		return joinLines(lines, newline), nil
 	}
 
-	lines = append(lines[:keyStart], append([]string{keyLine}, lines[keyEnd:]...)...)
+	lines = slices.Concat(lines[:keyStart], []string{keyLine}, lines[keyEnd:])
 	return joinLines(lines, newline), nil
 }
 
