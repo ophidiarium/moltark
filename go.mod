@@ -8,7 +8,7 @@ require (
 	github.com/goccy/go-yaml v1.18.0
 	github.com/mitchellh/cli v1.1.5
 	github.com/pelletier/go-toml/v2 v2.3.0
-	go.starlark.net v0.0.0-20251029211736-7849196f18cf
+	go.starlark.net v0.0.0-20260326113308-fadfc96def35
 )
 
 require (
