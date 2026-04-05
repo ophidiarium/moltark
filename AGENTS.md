@@ -39,6 +39,8 @@ Current first-party implementation reality:
 - first-class core primitives live in `moltark/core`
 - current first-party ecosystem modules are `moltark/python` and `astral/uv`
 - generic structured-file reconciliation exists for JSON, TOML, and YAML
+- this repository itself is built and tested with Bazel + Gazelle using `MODULE.bazel` and generated `BUILD.bazel` files
+- Bazel-side Gherkin support is local to this repo in `tools/bazel/gherkin_defs.bzl` and is intentionally designed around Go `godog`, not a separate Ruby or C++ runtime
 - Go and Rust are important target ecosystems, but they are not yet first-party module families in the repo today
 
 Do not describe the current codebase as if Go and Rust already have the same first-party module depth as Python.
@@ -58,9 +60,11 @@ Then orient in code with:
 - [`internal/moltark/types.go`](./internal/moltark/types.go) for the core IR
 - [`internal/moltark/config.go`](./internal/moltark/config.go) for `Moltarkfile` evaluation
 - [`internal/moltark/modules.go`](./internal/moltark/modules.go) for first-party module loading
+- [`internal/moltark/pipeline.go`](./internal/moltark/pipeline.go) for explicit engine phases
 - [`internal/moltark/resolve.go`](./internal/moltark/resolve.go) for provider, fact, and intent resolution
 - [`internal/moltark/plan.go`](./internal/moltark/plan.go) for change classification
 - [`internal/moltark/service.go`](./internal/moltark/service.go) for `plan` / `apply` orchestration
+- [`tools/bazel/gherkin_defs.bzl`](./tools/bazel/gherkin_defs.bzl) for local Bazel Gherkin rules
 
 The main mental model is:
 
@@ -217,20 +221,31 @@ Current test framework details:
 - integration snapshots use `github.com/gkampitakis/go-snaps`
 - Gherkin scenarios use `github.com/cucumber/godog`
 - package tests use the standard Go `testing` package
+- Bazel test execution uses local Gazelle-managed `BUILD.bazel` files plus local Gherkin rules in `tools/bazel/gherkin_defs.bzl`
 - fixtures live under `tests/fixtures/`
 - integration tests live under `tests/integration/`
 - snapshot files live under `tests/integration/__snapshots__/`
 - feature tests live under `tests/features/`
+- Bazel-aware test path helpers live under `internal/testrepo/`
 
 Current commands:
 
 - full suite: `go test -count=1 ./...`
+- Bazel suite: `bazelisk test //...`
+- regenerate `BUILD.bazel` files: `bazelisk run //:gazelle`
+- build the CLI with Bazel: `bazelisk build //:moltark`
 - core package tests: `go test -count=1 ./internal/moltark/...`
 - integration only: `go test -count=1 ./tests/integration/...`
 - feature only: `go test -count=1 ./tests/features/...`
 - refresh integration snapshots: `UPDATE_SNAPS=true go test -count=1 ./tests/integration/...`
 
 Use `-count=1` when changing snapshots or CLI behavior to avoid stale test-cache confusion.
+
+When touching Bazel files:
+
+- keep Gazelle as the source of truth for normal Go target generation
+- only hand-maintain what Gazelle cannot infer, such as repo-level directives, fixture/snapshot data wiring, and local Gherkin rule usage
+- prefer `bazelisk` over a globally installed `bazel`
 
 When adding behavior:
 

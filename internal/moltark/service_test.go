@@ -1,13 +1,12 @@
 package moltark
 
 import (
-	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/ophidiarium/moltark/internal/testrepo"
 )
 
 func TestApplyReplansAgainstFreshFileBodies(t *testing.T) {
@@ -63,61 +62,5 @@ func TestApplyReplansAgainstFreshFileBodies(t *testing.T) {
 }
 
 func prepareFixture(name string) (string, error) {
-	root, err := os.MkdirTemp("", "moltark-fixture-*")
-	if err != nil {
-		return "", err
-	}
-	src := filepath.Join(repoRoot(), "tests", "fixtures", name)
-	if err := copyDir(src, root); err != nil {
-		_ = os.RemoveAll(root)
-		return "", err
-	}
-	return root, nil
-}
-
-func copyDir(src string, dst string) error {
-	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		rel, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-		target := filepath.Join(dst, rel)
-
-		if d.IsDir() {
-			return os.MkdirAll(target, 0o755)
-		}
-
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-			return err
-		}
-
-		in, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer in.Close()
-
-		out, err := os.Create(target)
-		if err != nil {
-			return err
-		}
-		defer out.Close()
-
-		if _, err := io.Copy(out, in); err != nil {
-			return err
-		}
-		return out.Close()
-	})
-}
-
-func repoRoot() string {
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		return filepath.Clean(".")
-	}
-	return filepath.Clean(filepath.Join(filepath.Dir(filename), "..", ".."))
+	return testrepo.PrepareFixture(name)
 }

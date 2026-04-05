@@ -46,6 +46,12 @@ The feature tests use:
 - `tests/features/uv_dependencies.feature`
 - `tests/features/uv_dependencies_test.go`
 
+Under Bazel, feature files are modeled explicitly through local rules in [`tools/bazel/gherkin_defs.bzl`](../tools/bazel/gherkin_defs.bzl):
+
+- `gherkin_library(...)` makes `.feature` files first-class Bazel inputs with transitive propagation
+- `godog_feature_test(...)` wraps `go_test` and adds those features to runfiles automatically
+- `godog` remains the actual executor, so feature behavior stays identical between `go test` and `bazelisk test`
+
 Use Gherkin when the scenario reads more clearly as repository behavior than as a raw CLI transcript.
 
 ## Commands
@@ -54,6 +60,18 @@ Run the full suite:
 
 ```bash
 go test -count=1 ./...
+```
+
+Run the Bazel suite:
+
+```bash
+bazelisk test //...
+```
+
+Regenerate `BUILD.bazel` files with Gazelle:
+
+```bash
+bazelisk run //:gazelle
 ```
 
 Run only integration tests:
@@ -75,6 +93,11 @@ UPDATE_SNAPS=true go test -count=1 ./tests/integration/...
 ```
 
 `-count=1` is recommended when working on snapshot-heavy behavior because Go test caching can otherwise make failures look stale after snapshot refreshes.
+
+For Bazel-driven development:
+
+- fixture, snapshot, and `.feature` files are intentionally wired through explicit rule inputs or `data` attributes, so keep those manual entries intact when rerunning Gazelle
+- use `bazelisk`, not an arbitrary global `bazel`, so the workspace version pinned in [`.bazelversion`](../.bazelversion) stays authoritative
 
 ## What To Test
 

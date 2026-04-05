@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "bazelbuild.vscode-bazel",
+        "golang.go",
+        "lntvan166.cucumber-jump-ext",
+        "arefazizian.gherkin-step-generator"
+    ]
+}

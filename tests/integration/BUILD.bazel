@@ -1,0 +1,19 @@
+load("@rules_go//go:def.bzl", "go_test")
+
+go_test(
+    name = "integration_test",
+    size = "small",  # keep
+    srcs = [
+        "integration_test.go",
+        "main_test.go",
+    ],
+    data = [
+        # keep
+        "//tests/fixtures:all_fixtures",
+        "__snapshots__/integration_test.snap",
+    ],
+    deps = [
+        "//internal/testutil",
+        "@com_github_gkampitakis_go_snaps//snaps",
+    ],
+)
