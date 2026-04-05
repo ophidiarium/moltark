@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	toml "github.com/pelletier/go-toml/v2"
+	"github.com/BurntSushi/toml"
 )
 
 func TestMutateTOMLFileUpdatesCompactAssignmentsAndPreservesMultilineStrings(t *testing.T) {

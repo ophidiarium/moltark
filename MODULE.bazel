@@ -12,10 +12,10 @@ go_deps.from_file(go_mod = "//:go.mod")
 # Keep this list tidy with `bazel mod tidy`.
 use_repo(
     go_deps,
+    "com_github_burntsushi_toml",
     "com_github_cucumber_godog",
     "com_github_gkampitakis_go_snaps",
     "com_github_mitchellh_cli",
-    "com_github_pelletier_go_toml_v2",
     "in_gopkg_yaml_v3",
     "net_starlark_go",
 )
