@@ -347,9 +347,24 @@ func findTable(lines []string, table string, mask []bool) (int, int) {
 
 func parseTableHeader(line string) (string, bool) {
 	trimmed := strings.TrimSpace(line)
-	if !strings.HasPrefix(trimmed, "[") || strings.HasPrefix(trimmed, "[[") {
+	if !strings.HasPrefix(trimmed, "[") {
 		return "", false
 	}
+
+	// Array-of-tables: [[name]]
+	if strings.HasPrefix(trimmed, "[[") {
+		end := strings.Index(trimmed, "]]")
+		if end <= 2 {
+			return "", false
+		}
+		rest := strings.TrimSpace(trimmed[end+2:])
+		if rest != "" && !strings.HasPrefix(rest, "#") {
+			return "", false
+		}
+		return strings.TrimSpace(trimmed[2:end]), true
+	}
+
+	// Standard table: [name]
 	end := strings.Index(trimmed, "]")
 	if end <= 0 {
 		return "", false

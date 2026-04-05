@@ -145,6 +145,47 @@ name = "real"
 	}
 }
 
+func TestMutateTOMLFileStopsAtArrayOfTablesBoundary(t *testing.T) {
+	raw := `[tool.uv]
+dev-dependencies = ["pytest"]
+
+[[tool.uv.index]]
+name = "custom"
+url = "https://example.com/simple"
+`
+
+	desiredValues := map[string]any{
+		"tool": map[string]any{
+			"uv": map[string]any{
+				"managed": true,
+			},
+		},
+	}
+
+	got, err := mutateTOMLFile(raw, desiredValues, []string{"tool.uv.managed"})
+	if err != nil {
+		t.Fatalf("mutateTOMLFile: %v", err)
+	}
+
+	// New key must land inside [tool.uv], before [[tool.uv.index]].
+	uvIdx := strings.Index(got, "[tool.uv]")
+	managedIdx := strings.Index(got, "managed = true")
+	arrayIdx := strings.Index(got, "[[tool.uv.index]]")
+
+	if managedIdx < 0 {
+		t.Fatalf("expected managed key to be inserted, got:\n%s", got)
+	}
+	if arrayIdx < 0 {
+		t.Fatalf("expected array-of-tables to be preserved, got:\n%s", got)
+	}
+	if managedIdx < uvIdx || managedIdx > arrayIdx {
+		t.Fatalf("expected managed key between [tool.uv] and [[tool.uv.index]], got:\n%s", got)
+	}
+	if !strings.Contains(got, `name = "custom"`) {
+		t.Fatalf("expected array-of-tables content to be preserved, got:\n%s", got)
+	}
+}
+
 func TestRenderTomlValueRendersValidInlineTables(t *testing.T) {
 	rendered, err := renderTomlValue(map[string]any{
 		"enabled": true,
