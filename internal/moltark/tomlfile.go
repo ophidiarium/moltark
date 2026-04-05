@@ -16,6 +16,9 @@ func decodeToml(raw []byte, v any) error {
 }
 
 func mutateTOMLFile(raw string, desiredValues map[string]any, ownedPaths []string) (string, error) {
+	if len(ownedPaths) == 0 {
+		return raw, nil
+	}
 	if strings.TrimSpace(raw) == "" {
 		return renderTOMLFile(desiredValues, ownedPaths)
 	}
@@ -51,6 +54,9 @@ func mutateTOMLFile(raw string, desiredValues map[string]any, ownedPaths []strin
 }
 
 func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) (string, error) {
+	if len(ownedPaths) == 0 {
+		return "", nil
+	}
 	sections := map[string][]string{}
 	rootKeys := []string{}
 	tableOrder := []string{}
