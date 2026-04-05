@@ -145,6 +145,44 @@ name = "real"
 	}
 }
 
+func TestMutateTOMLFileSkipsMultilineStringsInsideArrays(t *testing.T) {
+	raw := `[project]
+classifiers = ["""
+[fake-table]
+name = "not-real"
+"""]
+name = "demo"
+`
+
+	desiredValues := map[string]any{
+		"project": map[string]any{
+			"name": "updated",
+		},
+	}
+
+	got, err := mutateTOMLFile(raw, desiredValues, []string{"project.name"})
+	if err != nil {
+		t.Fatalf("mutateTOMLFile: %v", err)
+	}
+
+	// The output must be valid TOML with the correct project.name value.
+	var parsed struct {
+		Project struct {
+			Name        string   `toml:"name"`
+			Classifiers []string `toml:"classifiers"`
+		} `toml:"project"`
+	}
+	if err := toml.Unmarshal([]byte(got), &parsed); err != nil {
+		t.Fatalf("output is not valid TOML: %v\ngot:\n%s", err, got)
+	}
+	if parsed.Project.Name != "updated" {
+		t.Fatalf("expected project.name = %q, got %q\nfull output:\n%s", "updated", parsed.Project.Name, got)
+	}
+	if len(parsed.Project.Classifiers) != 1 || !strings.Contains(parsed.Project.Classifiers[0], "[fake-table]") {
+		t.Fatalf("expected classifiers to be preserved, got %v\nfull output:\n%s", parsed.Project.Classifiers, got)
+	}
+}
+
 func TestMutateTOMLFileStopsAtArrayOfTablesBoundary(t *testing.T) {
 	raw := `[tool.uv]
 dev-dependencies = ["pytest"]

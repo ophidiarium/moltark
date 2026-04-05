@@ -255,36 +255,21 @@ func upsertTomlKey(raw string, table string, key string, value string) (string, 
 }
 
 // buildMultilineMask returns a boolean slice where mask[i] is true when
-// line i is a continuation of a multi-line basic (""") or literal (”')
-// string value. The opening key=value line itself is not masked.
+// line i is a continuation of a multi-line value (strings, arrays, inline
+// tables). The opening key=value line itself is not masked. Detection uses
+// the TOML parser to determine when an assignment is complete, so it
+// handles all multi-line forms correctly.
 func buildMultilineMask(lines []string) []bool {
 	mask := make([]bool, len(lines))
-	inMultiline := false
-	closer := ""
-	for i, line := range lines {
-		if inMultiline {
-			mask[i] = true
-			if strings.Contains(line, closer) {
-				inMultiline = false
-			}
+	for i := 0; i < len(lines); i++ {
+		if assignmentIndex(lines[i]) < 0 {
 			continue
 		}
-		idx := assignmentIndex(line)
-		if idx < 0 {
-			continue
+		valueEnd := findValueEnd(lines, i, len(lines))
+		for j := i + 1; j < valueEnd; j++ {
+			mask[j] = true
 		}
-		value := strings.TrimSpace(line[idx+1:])
-		if strings.HasPrefix(value, `"""`) {
-			if rest := value[3:]; !strings.Contains(rest, `"""`) {
-				inMultiline = true
-				closer = `"""`
-			}
-		} else if strings.HasPrefix(value, `'''`) {
-			if rest := value[3:]; !strings.Contains(rest, `'''`) {
-				inMultiline = true
-				closer = `'''`
-			}
-		}
+		i = valueEnd - 1
 	}
 	return mask
 }
