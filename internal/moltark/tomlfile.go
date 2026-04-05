@@ -200,10 +200,11 @@ func renderTomlInlineTable(values map[string]any) string {
 
 func upsertTomlKey(raw string, table string, key string, value string) (string, error) {
 	lines, newline := splitText(raw)
+	mask := buildMultilineMask(lines)
 	keyLine := fmt.Sprintf("%s = %s", key, value)
 	if table == "" {
-		start, end := findRootTable(lines)
-		keyStart, keyEnd := findKey(lines, start, end, key)
+		start, end := findRootTable(lines, mask)
+		keyStart, keyEnd := findKey(lines, start, end, key, mask)
 		if keyStart == -1 {
 			insertAt := end
 			for insertAt > start+1 && strings.TrimSpace(lines[insertAt-1]) == "" {
@@ -216,7 +217,7 @@ func upsertTomlKey(raw string, table string, key string, value string) (string, 
 		lines = append(lines[:keyStart], append([]string{keyLine}, lines[keyEnd:]...)...)
 		return joinLines(lines, newline), nil
 	}
-	start, end := findTable(lines, table)
+	start, end := findTable(lines, table, mask)
 	if start == -1 {
 		insertAt := len(lines)
 		for insertAt > 0 && strings.TrimSpace(lines[insertAt-1]) == "" {
@@ -231,7 +232,7 @@ func upsertTomlKey(raw string, table string, key string, value string) (string, 
 		return joinLines(lines, newline), nil
 	}
 
-	keyStart, keyEnd := findKey(lines, start, end, key)
+	keyStart, keyEnd := findKey(lines, start, end, key, mask)
 	if keyStart == -1 {
 		insertAt := end
 		for insertAt > start+1 && strings.TrimSpace(lines[insertAt-1]) == "" {
@@ -245,8 +246,46 @@ func upsertTomlKey(raw string, table string, key string, value string) (string, 
 	return joinLines(lines, newline), nil
 }
 
-func findRootTable(lines []string) (int, int) {
+// buildMultilineMask returns a boolean slice where mask[i] is true when
+// line i is a continuation of a multi-line basic (""") or literal (''')
+// string value. The opening key=value line itself is not masked.
+func buildMultilineMask(lines []string) []bool {
+	mask := make([]bool, len(lines))
+	inMultiline := false
+	closer := ""
 	for i, line := range lines {
+		if inMultiline {
+			mask[i] = true
+			if strings.Contains(line, closer) {
+				inMultiline = false
+			}
+			continue
+		}
+		idx := assignmentIndex(line)
+		if idx < 0 {
+			continue
+		}
+		value := strings.TrimSpace(line[idx+1:])
+		if strings.HasPrefix(value, `"""`) {
+			if rest := value[3:]; !strings.Contains(rest, `"""`) {
+				inMultiline = true
+				closer = `"""`
+			}
+		} else if strings.HasPrefix(value, `'''`) {
+			if rest := value[3:]; !strings.Contains(rest, `'''`) {
+				inMultiline = true
+				closer = `'''`
+			}
+		}
+	}
+	return mask
+}
+
+func findRootTable(lines []string, mask []bool) (int, int) {
+	for i, line := range lines {
+		if mask[i] {
+			continue
+		}
 		if _, ok := parseTableHeader(line); ok {
 			return -1, i
 		}
@@ -274,9 +313,12 @@ func joinLines(lines []string, newline string) string {
 	return strings.Join(lines, newline) + newline
 }
 
-func findTable(lines []string, table string) (int, int) {
+func findTable(lines []string, table string, mask []bool) (int, int) {
 	start := -1
 	for i, line := range lines {
+		if mask[i] {
+			continue
+		}
 		name, ok := parseTableHeader(line)
 		if !ok {
 			continue
@@ -313,8 +355,11 @@ func parseTableHeader(line string) (string, bool) {
 	return strings.TrimSpace(trimmed[1:end]), true
 }
 
-func findKey(lines []string, start int, end int, key string) (int, int) {
+func findKey(lines []string, start int, end int, key string, mask []bool) (int, int) {
 	for i := start + 1; i < end; i++ {
+		if mask[i] {
+			continue
+		}
 		trimmed := strings.TrimSpace(lines[i])
 		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			continue

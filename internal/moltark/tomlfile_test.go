@@ -59,6 +59,92 @@ func TestMutateTOMLFileRejectsMissingOwnedPaths(t *testing.T) {
 	}
 }
 
+func TestMutateTOMLFileSkipsKeysInsideMultilineStrings(t *testing.T) {
+	raw := `[project]
+description = """
+name = "not-the-real-name"
+"""
+name = "real"
+version = "0.1.0"
+`
+
+	desiredValues := map[string]any{
+		"project": map[string]any{
+			"name": "updated",
+		},
+	}
+
+	got, err := mutateTOMLFile(raw, desiredValues, []string{"project.name"})
+	if err != nil {
+		t.Fatalf("mutateTOMLFile: %v", err)
+	}
+
+	if !strings.Contains(got, "name = \"updated\"\n") {
+		t.Fatalf("expected updated project.name, got:\n%s", got)
+	}
+	if !strings.Contains(got, "name = \"not-the-real-name\"") {
+		t.Fatalf("expected multiline content to be preserved, got:\n%s", got)
+	}
+}
+
+func TestMutateTOMLFileSkipsTableHeadersInsideMultilineStrings(t *testing.T) {
+	raw := `[project]
+description = """
+[build-system]
+fake content
+"""
+name = "demo"
+
+[build-system]
+requires = ["hatchling"]
+`
+
+	desiredValues := map[string]any{
+		"build-system": map[string]any{
+			"requires": []string{"flit_core"},
+		},
+	}
+
+	got, err := mutateTOMLFile(raw, desiredValues, []string{"build-system.requires"})
+	if err != nil {
+		t.Fatalf("mutateTOMLFile: %v", err)
+	}
+
+	if !strings.Contains(got, `requires = ["flit_core"]`) {
+		t.Fatalf("expected updated build-system.requires, got:\n%s", got)
+	}
+	if !strings.Contains(got, "[build-system]\nfake content") {
+		t.Fatalf("expected multiline content to be preserved, got:\n%s", got)
+	}
+}
+
+func TestMutateTOMLFileSkipsLiteralMultilineStrings(t *testing.T) {
+	raw := `[project]
+description = '''
+name = "not-the-real-name"
+'''
+name = "real"
+`
+
+	desiredValues := map[string]any{
+		"project": map[string]any{
+			"name": "updated",
+		},
+	}
+
+	got, err := mutateTOMLFile(raw, desiredValues, []string{"project.name"})
+	if err != nil {
+		t.Fatalf("mutateTOMLFile: %v", err)
+	}
+
+	if !strings.Contains(got, "name = \"updated\"\n") {
+		t.Fatalf("expected updated project.name, got:\n%s", got)
+	}
+	if !strings.Contains(got, "name = \"not-the-real-name\"") {
+		t.Fatalf("expected literal multiline content to be preserved, got:\n%s", got)
+	}
+}
+
 func TestRenderTomlValueRendersValidInlineTables(t *testing.T) {
 	rendered := renderTomlValue(map[string]any{
 		"enabled": true,
