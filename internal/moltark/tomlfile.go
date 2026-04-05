@@ -10,14 +10,6 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-func parseTomlValues(raw []byte) (map[string]any, error) {
-	values := map[string]any{}
-	if err := toml.Unmarshal(raw, &values); err != nil {
-		return nil, err
-	}
-	return values, nil
-}
-
 func decodeToml(raw []byte, v any) error {
 	return toml.Unmarshal(raw, v)
 }
@@ -436,8 +428,8 @@ func assignmentIndex(line string) int {
 }
 
 func isCompleteTomlAssignment(snippet string) bool {
-	values := map[string]any{}
-	return toml.Unmarshal([]byte(snippet), &values) == nil
+	var values map[string]any
+	return decodeToml([]byte(snippet), &values) == nil
 }
 
 func insertLines(lines []string, at int, inserts []string) []string {

@@ -174,8 +174,8 @@ func loadStructuredDocument(path string, format string) (fileDocument, error) {
 
 	switch format {
 	case FileFormatTOML:
-		values, err := parseTomlValues([]byte(raw))
-		if err != nil {
+		values := map[string]any{}
+		if err := decodeToml([]byte(raw), &values); err != nil {
 			return fileDocument{}, err
 		}
 		doc.Values = values
