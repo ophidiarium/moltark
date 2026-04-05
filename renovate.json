@@ -8,5 +8,11 @@
     "bazel-module",
     "bazelisk",
     "github-actions"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": false
+    }
   ]
 }
