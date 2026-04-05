@@ -57,7 +57,7 @@ func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) (string, 
 	for _, ownedPath := range ownedPaths {
 		table, key := splitOwnedPath(ownedPath)
 		if table == "" {
-			if !containsString(rootKeys, key) {
+			if !slices.Contains(rootKeys, key) {
 				rootKeys = append(rootKeys, key)
 			}
 			continue
@@ -65,7 +65,7 @@ func renderTOMLFile(desiredValues map[string]any, ownedPaths []string) (string, 
 		if _, ok := sections[table]; !ok {
 			tableOrder = append(tableOrder, table)
 		}
-		if !containsString(sections[table], key) {
+		if !slices.Contains(sections[table], key) {
 			sections[table] = append(sections[table], key)
 		}
 	}
@@ -118,14 +118,6 @@ func splitOwnedPath(path string) (string, string) {
 	return path[:index], path[index+1:]
 }
 
-func containsString(values []string, target string) bool {
-	for _, value := range values {
-		if value == target {
-			return true
-		}
-	}
-	return false
-}
 
 func renderTomlValue(value any) (string, error) {
 	switch typed := value.(type) {
