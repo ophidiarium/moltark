@@ -3,7 +3,7 @@ package moltark
 import "path/filepath"
 
 const (
-	MoltarkfileName         = "Moltarkfile"
+	MoltarkfileName         = "molt.star"
 	PyprojectFileName       = "pyproject.toml"
 	GitattributesFileName   = ".gitattributes"
 	StateDirName            = ".moltark"

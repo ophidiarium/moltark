@@ -32,7 +32,7 @@ func (c *InitCommand) Help() string {
 	return `Usage: moltark init
 
   Initialize Moltark in the current repository by creating a minimal
-  Starlark Moltarkfile when one does not already exist.
+  molt.star when one does not already exist.
 
   This command does not reconcile pyproject.toml. Run "moltark plan"
   and "moltark apply" after initialization.`

@@ -43,7 +43,7 @@ Use `-count=1` when changing snapshots or CLI behavior to avoid stale test-cache
 **CLI layer**: `cmd/moltark/main.go` -> `internal/cliapp/app.go` -> `internal/command/` (one file per subcommand: init, plan, apply, show, doctor, version). Uses `github.com/mitchellh/cli`.
 
 **Engine pipeline** (`internal/moltark/pipeline.go`): Five sequential phases:
-1. **Evaluate** - load `Moltarkfile` via Starlark (`config.go`) into `DesiredModel` (projects + components)
+1. **Evaluate** - load `molt.star` via Starlark (`config.go`) into `DesiredModel` (projects + components)
 2. **Resolve** - resolve facts, providers, routed intents (`resolve.go`) into `ResolvedModel` with managed files
 3. **Inspect** - read current repo state: structured files (TOML/JSON/YAML), `.moltark/state.json`, `.gitattributes`
 4. **Persist** - build next state from desired+resolved model
@@ -62,7 +62,7 @@ Use `-count=1` when changing snapshots or CLI behavior to avoid stale test-cache
 - **Package tests**: `internal/moltark/*_test.go` -- planner, resolver, mutator, state logic
 - **Integration snapshots**: `tests/integration/` -- copies fixture repos to temp dirs, runs CLI commands, snapshots output via `go-snaps`
 - **Gherkin features**: `tests/features/` -- behavioral scenarios via `godog`
-- **Fixtures**: `tests/fixtures/` -- real repository structures (Moltarkfile + pyproject.toml + state.json)
+- **Fixtures**: `tests/fixtures/` -- real repository structures (molt.star + pyproject.toml + state.json)
 - **Test helpers**: `internal/testutil/` (general), `internal/testrepo/` (Bazel-aware path helpers)
 
 ## Bazel / Gazelle

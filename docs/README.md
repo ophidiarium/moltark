@@ -15,7 +15,7 @@ The docs are arranged for incremental discovery:
 
 The current MVP implementation is intentionally narrow:
 
-- one root `Moltarkfile` per repository
+- one root `molt.star` per repository
 - Python projects as the first concrete project type
 - `astral/uv` as the first concrete provider module
 - reconciliation of `pyproject.toml`, `.gitattributes`, and `.moltark/state.json`

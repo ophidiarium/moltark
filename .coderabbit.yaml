@@ -57,7 +57,7 @@ reviews:
     - path: 'internal/moltark/**/*.go'
       instructions: |
         Moltark is a reconciler, not a one-shot generator. Review changes in core logic against the whole reconciliation pipeline, not the touched file in isolation:
-        1. `Moltarkfile` evaluation into projects and components
+        1. `molt.star` evaluation into projects and components
         2. fact, provider, and routed-intent resolution
         3. managed-file ownership surfaces
         4. plan/apply/show/doctor behavior and state updates

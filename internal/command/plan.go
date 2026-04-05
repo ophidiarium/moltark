@@ -41,7 +41,7 @@ func (c *PlanCommand) Run(args []string) int {
 func (c *PlanCommand) Help() string {
 	return `Usage: moltark plan [options]
 
-  Compare the Moltarkfile desired state with the current repository and
+  Compare the molt.star desired state with the current repository and
   show the planned file updates without writing them.
 
 Options:
@@ -50,5 +50,5 @@ Options:
 }
 
 func (c *PlanCommand) Synopsis() string {
-	return "Show repository changes required by the Moltarkfile"
+	return "Show repository changes required by molt.star"
 }

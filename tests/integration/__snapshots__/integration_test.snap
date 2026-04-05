@@ -3,7 +3,7 @@
 $ moltark init
 exit: 0
 stdout:
-  Created Moltarkfile. Run `moltark plan` to inspect the initial reconciliation.
+  Created molt.star. Run `moltark plan` to inspect the initial reconciliation.
 stderr:
   <empty>
 
@@ -66,7 +66,7 @@ stderr:
   <empty>
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 python = use("moltark/python")
 
 root = python.python_project(
@@ -212,7 +212,7 @@ stderr:
   <empty>
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 python = use("moltark/python")
 
 python.python_project(
@@ -339,7 +339,7 @@ stderr:
   <empty>
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 python = use("moltark/python")
 
 python.python_project(
@@ -459,7 +459,7 @@ stderr:
   Apply aborted due to conflicts.
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 python = use("moltark/python")
 
 python.python_project(
@@ -600,7 +600,7 @@ stderr:
   <empty>
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 python = use("moltark/python")
 
 python.python_project(
@@ -1991,7 +1991,7 @@ stderr:
   <empty>
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 python = use("moltark/python")
 uv = use("astral/uv")
 
@@ -3531,7 +3531,7 @@ stderr:
   <empty>
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 python = use("moltark/python")
 uv = use("astral/uv")
 core = use("moltark/core")
@@ -4552,7 +4552,7 @@ stderr:
   <empty>
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 core = use("moltark/core")
 
 app = core.project(
@@ -5262,7 +5262,7 @@ stderr:
   <empty>
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 core = use("moltark/core")
 python = use("moltark/python")
 
@@ -5947,7 +5947,7 @@ stderr:
   <empty>
 
 /-/-/-/
-== Moltarkfile ==
+== molt.star ==
 core = use("moltark/core")
 
 repo = core.project(

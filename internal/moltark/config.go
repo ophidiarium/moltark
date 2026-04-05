@@ -33,7 +33,7 @@ func LoadDesiredModel(root string) (DesiredModel, error) {
 func InitRepository(root string) (string, error) {
 	path := filepath.Join(root, MoltarkfileName)
 	if _, err := os.Stat(path); err == nil {
-		return "Moltarkfile already exists. No changes made.", nil
+		return fmt.Sprintf("%s already exists. No changes made.", MoltarkfileName), nil
 	} else if !os.IsNotExist(err) {
 		return "", fmt.Errorf("stat %s: %w", MoltarkfileName, err)
 	}
@@ -77,7 +77,7 @@ func InitRepository(root string) (string, error) {
 		return "", fmt.Errorf("write %s: %w", MoltarkfileName, err)
 	}
 
-	return "Created Moltarkfile. Run `moltark plan` to inspect the initial reconciliation.", nil
+	return fmt.Sprintf("Created %s. Run `moltark plan` to inspect the initial reconciliation.", MoltarkfileName), nil
 }
 
 type desiredModelBuilder struct {

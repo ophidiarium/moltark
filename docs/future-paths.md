@@ -32,7 +32,7 @@ That is how `astral/uv` can eventually stop being a special first-party Go imple
 
 ## 3. Polyglot Monorepos
 
-Moltark should support one root repository workspace per `Moltarkfile`, not many unrelated workspaces in one file.
+Moltark should support one root repository workspace per `molt.star`, not many unrelated workspaces in one file.
 
 Within that root, it should support:
 

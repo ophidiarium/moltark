@@ -35,7 +35,7 @@ Do not optimize early for broad ecosystem support.
 
 Current first-party implementation reality:
 
-- one root `Moltarkfile` per repository
+- one root `molt.star` per repository
 - first-class core primitives live in `moltark/core`
 - current first-party ecosystem modules are `moltark/python` and `astral/uv`
 - generic structured-file reconciliation exists for JSON, TOML, and YAML
@@ -58,7 +58,7 @@ If you are new to the codebase, read in this order:
 Then orient in code with:
 
 - [`internal/moltark/types.go`](./internal/moltark/types.go) for the core IR
-- [`internal/moltark/config.go`](./internal/moltark/config.go) for `Moltarkfile` evaluation
+- [`internal/moltark/config.go`](./internal/moltark/config.go) for `molt.star` evaluation
 - [`internal/moltark/modules.go`](./internal/moltark/modules.go) for first-party module loading
 - [`internal/moltark/pipeline.go`](./internal/moltark/pipeline.go) for explicit engine phases
 - [`internal/moltark/resolve.go`](./internal/moltark/resolve.go) for provider, fact, and intent resolution

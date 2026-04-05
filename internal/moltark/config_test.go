@@ -18,7 +18,7 @@ python.python_project(
 )
 `
 	if err := os.WriteFile(filepath.Join(root, MoltarkfileName), []byte(content), 0o644); err != nil {
-		t.Fatalf("write Moltarkfile: %v", err)
+		t.Fatalf("write %s: %v", MoltarkfileName, err)
 	}
 
 	_, err := LoadDesiredModel(root)
