@@ -118,7 +118,6 @@ func splitOwnedPath(path string) (string, string) {
 	return path[:index], path[index+1:]
 }
 
-
 func renderTomlValue(value any) (string, error) {
 	switch typed := value.(type) {
 	case nil:
@@ -256,7 +255,7 @@ func upsertTomlKey(raw string, table string, key string, value string) (string, 
 }
 
 // buildMultilineMask returns a boolean slice where mask[i] is true when
-// line i is a continuation of a multi-line basic (""") or literal (''')
+// line i is a continuation of a multi-line basic (""") or literal (”')
 // string value. The opening key=value line itself is not masked.
 func buildMultilineMask(lines []string) []bool {
 	mask := make([]bool, len(lines))
