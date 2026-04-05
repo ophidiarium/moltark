@@ -45,5 +45,8 @@ func renderYAMLFile(values map[string]any) (string, error) {
 	if err := enc.Encode(values); err != nil {
 		return "", err
 	}
+	if err := enc.Close(); err != nil {
+		return "", err
+	}
 	return ensureTrailingNewline(buf.String()), nil
 }
