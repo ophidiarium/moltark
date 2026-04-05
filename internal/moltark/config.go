@@ -43,25 +43,24 @@ func InitRepository(root string) (string, error) {
 	requiresPython := DefaultRequiresPython
 
 	if raw, err := os.ReadFile(filepath.Join(root, PyprojectFileName)); err == nil {
-		values, err := parseTomlValues(raw)
-		if err != nil {
+		var info struct {
+			Project struct {
+				Name           string `toml:"name"`
+				Version        string `toml:"version"`
+				RequiresPython string `toml:"requires-python"`
+			} `toml:"project"`
+		}
+		if err := decodeToml(raw, &info); err != nil {
 			return "", fmt.Errorf("read existing pyproject.toml: %w", err)
 		}
-
-		if value, ok := lookupPath(values, "project.name"); ok {
-			if nameValue, ok := value.(string); ok && nameValue != "" {
-				name = nameValue
-			}
+		if info.Project.Name != "" {
+			name = info.Project.Name
 		}
-		if value, ok := lookupPath(values, "project.version"); ok {
-			if versionValue, ok := value.(string); ok && versionValue != "" {
-				version = versionValue
-			}
+		if info.Project.Version != "" {
+			version = info.Project.Version
 		}
-		if value, ok := lookupPath(values, "project.requires-python"); ok {
-			if requiresValue, ok := value.(string); ok && requiresValue != "" {
-				requiresPython = requiresValue
-			}
+		if info.Project.RequiresPython != "" {
+			requiresPython = info.Project.RequiresPython
 		}
 	}
 

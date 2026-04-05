@@ -3,10 +3,10 @@ module github.com/ophidiarium/moltark
 go 1.26.0
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/cucumber/godog v0.15.1
 	github.com/gkampitakis/go-snaps v0.5.21
 	github.com/mitchellh/cli v1.1.5
-	github.com/pelletier/go-toml/v2 v2.3.0
 	go.starlark.net v0.0.0-20251029211736-7849196f18cf
 	gopkg.in/yaml.v3 v3.0.1
 )
