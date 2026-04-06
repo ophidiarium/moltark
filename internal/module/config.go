@@ -232,6 +232,11 @@ func normalizeProjectPath(value string) (string, error) {
 	if value == "" {
 		value = "."
 	}
+	// Canonicalize to forward slashes before filepath.Clean so that ".."
+	// segments separated by backslashes are resolved on every platform.
+	// On Unix filepath.Clean treats '\' as a literal filename character,
+	// so "pkg\..\..\outside" would pass the escape check untouched.
+	value = strings.ReplaceAll(value, "\\", "/")
 	if filepath.IsAbs(value) {
 		return "", fmt.Errorf("must be relative")
 	}

@@ -9,6 +9,36 @@ import (
 	"github.com/ophidiarium/moltark/internal/model"
 )
 
+func TestNormalizeProjectPathNormalizesBackslashes(t *testing.T) {
+	got, err := normalizeProjectPath(`sub\dir`)
+	if err != nil {
+		t.Fatalf("normalizeProjectPath(%q): unexpected error: %v", `sub\dir`, err)
+	}
+	if got != "sub/dir" {
+		t.Errorf("normalizeProjectPath(%q) = %q, want %q", `sub\dir`, got, "sub/dir")
+	}
+}
+
+func TestNormalizeProjectPathRejectsEscapes(t *testing.T) {
+	cases := []string{
+		"..",
+		"../outside",
+		"pkg/../../outside",
+		`pkg\..\..\outside`,
+		`pkg\..\..\..\outside`,
+	}
+	for _, input := range cases {
+		_, err := normalizeProjectPath(input)
+		if err == nil {
+			t.Errorf("normalizeProjectPath(%q): expected error, got nil", input)
+			continue
+		}
+		if !strings.Contains(err.Error(), "must not escape") {
+			t.Errorf("normalizeProjectPath(%q): got %q, want escape error", input, err)
+		}
+	}
+}
+
 func TestLoadDesiredModelRejectsModuleVersions(t *testing.T) {
 	root := t.TempDir()
 	content := `python = use("moltark/python", version = "v0.1.0")
