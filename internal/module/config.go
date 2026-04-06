@@ -67,7 +67,8 @@ func InitRepository(root string) (string, error) {
 	}
 
 	content := fmt.Sprintf(
-		"python = use(%q)\n\nroot = python.python_project(\n    name = %q,\n    path = \".\",\n    version = %q,\n    requires_python = %q,\n)\n",
+		"\"\"\"Moltark configuration for %s.\"\"\"\n\npython = use(%q)\n\nroot = python.python_project(\n    name = %q,\n    path = \".\",\n    version = %q,\n    requires_python = %q,\n)\n",
+		name,
 		model.ModuleSourcePython,
 		name,
 		version,

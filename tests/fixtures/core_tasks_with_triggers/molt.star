@@ -1,3 +1,5 @@
+"""A uv workspace with tasks, triggers, and bootstrap requirements."""
+
 python = use("moltark/python")
 uv = use("astral/uv")
 core = use("moltark/core")

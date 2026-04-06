@@ -67,6 +67,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""Moltark configuration for demo."""
+
 python = use("moltark/python")
 
 root = python.python_project(
@@ -213,6 +215,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""A bare Python project with uv dependency management."""
+
 python = use("moltark/python")
 
 python.python_project(
@@ -340,6 +344,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""A Python project with drifted owned field values."""
+
 python = use("moltark/python")
 
 python.python_project(
@@ -460,6 +466,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""A Python project with conflicting owned field values."""
+
 python = use("moltark/python")
 
 python.python_project(
@@ -601,6 +609,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""A Python project upgraded from template v1 to v2."""
+
 python = use("moltark/python")
 
 python.python_project(
@@ -1992,6 +2002,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""A uv workspace with a nested root and multiple integration packages."""
+
 python = use("moltark/python")
 uv = use("astral/uv")
 
@@ -3532,6 +3544,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""A uv workspace with tasks, triggers, and bootstrap requirements."""
+
 python = use("moltark/python")
 uv = use("astral/uv")
 core = use("moltark/core")
@@ -4553,6 +4567,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""A Go project with linting, VS Code integration, and fact-driven config."""
+
 core = use("moltark/core")
 
 app = core.project(
@@ -5263,6 +5279,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""A workspace with an opaque root and a nested Python child project."""
+
 core = use("moltark/core")
 python = use("moltark/python")
 
@@ -5948,6 +5966,8 @@ stderr:
 
 /-/-/-/
 == molt.star ==
+"""A workspace managing structured JSON, TOML, and YAML files."""
+
 core = use("moltark/core")
 
 repo = core.project(

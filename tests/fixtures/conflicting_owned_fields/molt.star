@@ -1,3 +1,5 @@
+"""A Python project with conflicting owned field values."""
+
 python = use("moltark/python")
 
 python.python_project(

@@ -1,3 +1,5 @@
+"""A workspace with an opaque root and a nested Python child project."""
+
 core = use("moltark/core")
 python = use("moltark/python")
 

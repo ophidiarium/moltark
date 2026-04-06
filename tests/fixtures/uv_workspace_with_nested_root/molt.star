@@ -1,3 +1,5 @@
+"""A uv workspace with a nested root and multiple integration packages."""
+
 python = use("moltark/python")
 uv = use("astral/uv")
 

@@ -1,3 +1,5 @@
+"""A Python project upgraded from template v1 to v2."""
+
 python = use("moltark/python")
 
 python.python_project(
