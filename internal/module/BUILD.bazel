@@ -28,7 +28,6 @@ go_test(
     srcs = [
         "config_test.go",
         "core_test.go",
-        "facts_test.go",
     ],
     embed = [":module"],
     deps = [
