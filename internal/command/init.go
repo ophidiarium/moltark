@@ -4,7 +4,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/ophidiarium/moltark/internal/moltark"
+	"github.com/ophidiarium/moltark/internal/model"
+	"github.com/ophidiarium/moltark/internal/module"
 )
 
 type InitCommand struct {
@@ -19,7 +20,7 @@ func (c *InitCommand) Run(args []string) int {
 		return 1
 	}
 
-	result, err := moltark.InitRepository(c.WorkingDir)
+	result, err := module.InitRepository(c.WorkingDir)
 	if err != nil {
 		c.errorf("Error: %s\n", err)
 		return 1
@@ -36,7 +37,7 @@ func (c *InitCommand) Help() string {
   %s when one does not already exist.
 
   This command does not reconcile pyproject.toml. Run "moltark plan"
-  and "moltark apply" after initialization.`, moltark.ProjectSpecFileName)
+  and "moltark apply" after initialization.`, model.ProjectSpecFileName)
 }
 
 func (c *InitCommand) Synopsis() string {

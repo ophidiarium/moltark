@@ -3,7 +3,7 @@ package command
 import (
 	"flag"
 
-	"github.com/ophidiarium/moltark/internal/moltark"
+	"github.com/ophidiarium/moltark/internal/engine"
 )
 
 type DoctorCommand struct {
@@ -24,7 +24,7 @@ func (c *DoctorCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.printLine(moltark.RenderDoctor(report))
+	c.printLine(engine.RenderDoctor(report))
 	if report.HasIssues {
 		return 1
 	}

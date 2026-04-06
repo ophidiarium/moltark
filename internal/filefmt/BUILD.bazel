@@ -1,0 +1,35 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "filefmt",
+    srcs = [
+        "gitattributes.go",
+        "json.go",
+        "paths.go",
+        "toml.go",
+        "yaml.go",
+    ],
+    importpath = "github.com/ophidiarium/moltark/internal/filefmt",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/model",
+        "@com_github_burntsushi_toml//:toml",
+        "@in_gopkg_yaml_v3//:yaml_v3",
+    ],
+)
+
+go_test(
+    name = "filefmt_test",
+    srcs = [
+        "gitattributes_test.go",
+        "json_test.go",
+        "paths_test.go",
+        "toml_test.go",
+        "yaml_test.go",
+    ],
+    embed = [":filefmt"],
+    deps = [
+        "//internal/model",
+        "@com_github_burntsushi_toml//:toml",
+    ],
+)
