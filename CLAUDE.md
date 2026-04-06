@@ -19,7 +19,9 @@ go build ./cmd/moltark              # Go build (quick local check)
 bazelisk test //...                  # Full Bazel suite (CI-authoritative)
 go test ./...                        # Full Go suite
 go test -count=1 ./...               # Full suite (no cache)
-go test -count=1 ./internal/moltark/...   # Core package tests
+go test -count=1 ./internal/engine/...    # Engine tests (pipeline, resolve, plan, state)
+go test -count=1 ./internal/filefmt/...   # File format handler tests
+go test -count=1 ./internal/module/...    # Starlark module tests
 go test -count=1 ./tests/integration/...  # Integration tests only
 go test -count=1 ./tests/features/...     # Gherkin feature tests only
 
@@ -42,24 +44,19 @@ Use `-count=1` when changing snapshots or CLI behavior to avoid stale test-cache
 
 **CLI layer**: `cmd/moltark/main.go` -> `internal/cliapp/app.go` -> `internal/command/` (one file per subcommand: init, plan, apply, show, doctor, version). Uses `github.com/mitchellh/cli`.
 
-**Engine pipeline** (`internal/moltark/pipeline.go`): Five sequential phases:
-1. **Evaluate** - load `molt.star` via Starlark (`config.go`) into `DesiredModel` (projects + components)
-2. **Resolve** - resolve facts, providers, routed intents (`resolve.go`) into `ResolvedModel` with managed files
-3. **Inspect** - read current repo state: structured files (TOML/JSON/YAML), `.moltark/state.json`, `.gitattributes`
-4. **Persist** - build next state from desired+resolved model
-5. **Plan** - classify each owned path as create/update/no-op/drift/conflict (`plan.go`)
+**Package layout** (acyclic dependency order: model <- filefmt <- module <- engine):
 
-**Service** (`internal/moltark/service.go`): Orchestrates `Plan`, `Apply`, `Show`, `Doctor` operations. Apply re-runs the full pipeline and verifies intent hasn't changed before writing.
+- **`internal/model`** — Shared domain types and constants. All IR types (`DesiredModel`, `ResolvedModel`, `Plan`, `Change`, `State`, etc.), change status/reason enums, file format constants, module source identifiers, and clone helpers. Zero internal dependencies.
 
-**First-party modules** (`internal/moltark/module_*.go`): `moltark/core`, `moltark/python`, `astral/uv`. Go and Rust are target ecosystems but do not yet have first-party module depth.
+- **`internal/filefmt`** — Structured file format handlers. Path resolution for TOML (dot notation) and JSON/YAML (JSON Pointer), format-specific parsers/mutators (TOML, JSON, YAML), `.gitattributes` managed-block logic. Depends on model only.
 
-**Structured file mutation**: Format-specific mutators for TOML (`pyproject.go`), JSON (`jsonfile.go`), YAML (`yamlfile.go`) that write only owned paths.
+- **`internal/module`** — Starlark DSL and module system. Config loading (`LoadDesiredModel`, `InitRepository`), module registry, first-party modules (`moltark/core`, `moltark/python`, `astral/uv`), Starlark value conversion, and fact-ref value type. Depends on model + filefmt.
 
-**Types** (`internal/moltark/types.go`): All IR types -- `DesiredModel`, `ResolvedModel`, `Pipeline`, `Plan`, `Change`, `State`, etc.
+- **`internal/engine`** — Reconciliation engine. Five-phase pipeline (evaluate -> resolve -> inspect -> persist -> plan), service layer (`Plan`, `Apply`, `Show`, `Doctor`), change classification, state management, and plan rendering. Depends on model + filefmt + module.
 
 ## Testing Structure
 
-- **Package tests**: `internal/moltark/*_test.go` -- planner, resolver, mutator, state logic
+- **Package tests**: `internal/engine/*_test.go` (pipeline, resolve, plan, state), `internal/filefmt/*_test.go` (format handlers, paths), `internal/module/*_test.go` (config loading, core module)
 - **Integration snapshots**: `tests/integration/` -- copies fixture repos to temp dirs, runs CLI commands, snapshots output via `go-snaps`
 - **Gherkin features**: `tests/features/` -- behavioral scenarios via `godog`
 - **Fixtures**: `tests/fixtures/` -- real repository structures (molt.star + pyproject.toml + state.json)

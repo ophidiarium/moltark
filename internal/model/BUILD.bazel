@@ -1,0 +1,11 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "model",
+    srcs = [
+        "constants.go",
+        "types.go",
+    ],
+    importpath = "github.com/ophidiarium/moltark/internal/model",
+    visibility = ["//:__subpackages__"],
+)

@@ -1,0 +1,40 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "engine",
+    srcs = [
+        "pipeline.go",
+        "plan.go",
+        "resolve.go",
+        "service.go",
+        "state.go",
+    ],
+    importpath = "github.com/ophidiarium/moltark/internal/engine",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/filefmt",
+        "//internal/model",
+        "//internal/module",
+    ],
+)
+
+go_test(
+    name = "engine_test",
+    size = "small",
+    srcs = [
+        "pipeline_test.go",
+        "plan_test.go",
+        "resolve_test.go",
+        "service_test.go",
+        "state_test.go",
+    ],
+    data = [
+        "//tests/fixtures:all_fixtures",
+    ],
+    embed = [":engine"],
+    deps = [
+        "//internal/filefmt",
+        "//internal/model",
+        "//internal/testrepo",
+    ],
+)
