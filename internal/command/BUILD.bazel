@@ -13,5 +13,9 @@ go_library(
     ],
     importpath = "github.com/ophidiarium/moltark/internal/command",
     visibility = ["//:__subpackages__"],
-    deps = ["//internal/moltark"],
+    deps = [
+        "//internal/engine",
+        "//internal/model",
+        "//internal/module",
+    ],
 )

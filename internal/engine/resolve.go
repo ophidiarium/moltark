@@ -1,0 +1,702 @@
+package engine
+
+import (
+	"fmt"
+	"sort"
+
+	"github.com/ophidiarium/moltark/internal/filefmt"
+	"github.com/ophidiarium/moltark/internal/model"
+)
+
+type providerInstance struct {
+	componentID string
+	provider    model.CapabilityProvider
+}
+
+type factInstance struct {
+	componentID string
+	fact        model.FactProviderSpec
+}
+
+func ResolveModel(desired model.DesiredModel) (model.ResolvedModel, error) {
+	managedByPath := map[string]*model.ManagedFileSpec{}
+	facts := make([]factInstance, 0, len(desired.Components))
+	publicFacts := []model.FactBinding{}
+	providers := make([]providerInstance, 0, len(desired.Components))
+	publicProviders := []model.ProviderBinding{}
+	synthesisHooks := []model.ResolvedSynthesisHook{}
+	bootstrapRequirements := []model.ResolvedBootstrapRequirement{}
+	tasks := []model.ResolvedTask{}
+	taskSurfaces := []model.ResolvedTaskSurface{}
+
+	for _, component := range desired.Components {
+		for _, fact := range component.Facts {
+			facts = append(facts, factInstance{
+				componentID: component.ID,
+				fact:        fact,
+			})
+			publicFacts = append(publicFacts, model.FactBinding{
+				ComponentID:    component.ID,
+				Name:           fact.Name,
+				ScopeProjectID: fact.ScopeProjectID,
+				Values:         model.CloneNestedMap(fact.Values),
+			})
+		}
+		for _, provider := range component.Providers {
+			providers = append(providers, providerInstance{
+				componentID: component.ID,
+				provider:    provider,
+			})
+			publicProviders = append(publicProviders, model.ProviderBinding{
+				ComponentID:    component.ID,
+				Capability:     provider.Capability,
+				ScopeProjectID: provider.ScopeProjectID,
+				Attributes:     model.CloneStringMap(provider.Attributes),
+				Lists:          model.CloneStringSliceMap(provider.Lists),
+			})
+		}
+		for _, hook := range component.SynthesisHooks {
+			project, err := requireProject(desired, hook.TargetProjectID)
+			if err != nil {
+				return model.ResolvedModel{}, fmt.Errorf("synthesis hook %q: %w", component.ID, err)
+			}
+			synthesisHooks = append(synthesisHooks, model.ResolvedSynthesisHook{
+				ComponentID:       component.ID,
+				Phase:             hook.Phase,
+				TargetProjectID:   hook.TargetProjectID,
+				TargetProjectPath: project.EffectivePath,
+				Description:       hook.Description,
+			})
+		}
+		for _, requirement := range component.BootstrapRequirements {
+			project, err := requireProject(desired, requirement.TargetProjectID)
+			if err != nil {
+				return model.ResolvedModel{}, fmt.Errorf("bootstrap requirement %q: %w", component.ID, err)
+			}
+			bootstrapRequirements = append(bootstrapRequirements, model.ResolvedBootstrapRequirement{
+				ComponentID:       component.ID,
+				Tool:              requirement.Tool,
+				TargetProjectID:   requirement.TargetProjectID,
+				TargetProjectPath: project.EffectivePath,
+				Purpose:           requirement.Purpose,
+				Strategies:        append([]string(nil), requirement.Strategies...),
+			})
+		}
+		for _, task := range component.Tasks {
+			project, err := requireProject(desired, task.TargetProjectID)
+			if err != nil {
+				return model.ResolvedModel{}, fmt.Errorf("task %q: %w", component.ID, err)
+			}
+			tasks = append(tasks, model.ResolvedTask{
+				ComponentID:       component.ID,
+				Name:              task.Name,
+				TargetProjectID:   task.TargetProjectID,
+				TargetProjectPath: project.EffectivePath,
+				Command:           append([]string(nil), task.Command...),
+				Runtime:           task.Runtime,
+				Tags:              append([]string(nil), task.Tags...),
+			})
+		}
+		for _, surface := range component.TaskSurfaces {
+			project, err := requireProject(desired, surface.TargetProjectID)
+			if err != nil {
+				return model.ResolvedModel{}, fmt.Errorf("task surface %q: %w", component.ID, err)
+			}
+			taskSurfaces = append(taskSurfaces, model.ResolvedTaskSurface{
+				ComponentID:       component.ID,
+				Name:              surface.Name,
+				Kind:              surface.Kind,
+				TargetProjectID:   surface.TargetProjectID,
+				TargetProjectPath: project.EffectivePath,
+			})
+		}
+	}
+
+	for _, component := range desired.Components {
+		for _, file := range component.Files {
+			resolvedValues, err := resolveFactRefs(desired, facts, file.DesiredValues, component.TargetProjectID)
+			if err != nil {
+				return model.ResolvedModel{}, fmt.Errorf("file intent %q: %w", component.ID, err)
+			}
+			resolvedFile := file
+			resolvedFile.DesiredValues = resolvedValues
+			if err := mergeManagedFileIntent(managedByPath, component.ID, component.Version, resolvedFile); err != nil {
+				return model.ResolvedModel{}, err
+			}
+		}
+	}
+
+	intentBindings := []model.IntentBinding{}
+	for _, component := range desired.Components {
+		for _, intent := range component.RoutedIntents {
+			provider, err := resolveCapabilityProvider(desired, providers, intent.Capability, intent.TargetProjectID)
+			if err != nil {
+				return model.ResolvedModel{}, fmt.Errorf("%s %q: %w", intent.Kind, component.ID, err)
+			}
+
+			intentBindings = append(intentBindings, model.IntentBinding{
+				ComponentID:            component.ID,
+				IntentKind:             intent.Kind,
+				Capability:             intent.Capability,
+				TargetProjectID:        intent.TargetProjectID,
+				Attributes:             model.CloneStringMap(intent.Attributes),
+				Lists:                  model.CloneStringSliceMap(intent.Lists),
+				ProviderComponentID:    provider.componentID,
+				ProviderScopeProjectID: provider.provider.ScopeProjectID,
+			})
+
+			switch intent.Kind {
+			case model.IntentWorkspaceMembersRequest:
+				if err := applyWorkspaceMembersIntent(managedByPath, component.ID, provider, intent); err != nil {
+					return model.ResolvedModel{}, err
+				}
+			case model.IntentPythonDependencyRequest:
+				if err := validatePythonDependencyIntent(provider, intent); err != nil {
+					return model.ResolvedModel{}, err
+				}
+			default:
+				return model.ResolvedModel{}, fmt.Errorf("unsupported routed intent kind %q", intent.Kind)
+			}
+		}
+	}
+
+	triggerBindings := []model.ResolvedTriggerBinding{}
+	for _, component := range desired.Components {
+		for _, binding := range component.TriggerBindings {
+			project, err := requireProject(desired, binding.TargetProjectID)
+			if err != nil {
+				return model.ResolvedModel{}, fmt.Errorf("trigger binding %q: %w", component.ID, err)
+			}
+
+			matches, err := resolveTriggerTasks(desired, tasks, binding)
+			if err != nil {
+				return model.ResolvedModel{}, fmt.Errorf("trigger binding %q: %w", component.ID, err)
+			}
+
+			for _, task := range matches {
+				triggerBindings = append(triggerBindings, model.ResolvedTriggerBinding{
+					ComponentID:           component.ID,
+					Trigger:               binding.Trigger,
+					TargetProjectID:       binding.TargetProjectID,
+					TargetProjectPath:     project.EffectivePath,
+					MatchNames:            append([]string(nil), binding.MatchNames...),
+					MatchTags:             append([]string(nil), binding.MatchTags...),
+					TaskComponentID:       task.ComponentID,
+					TaskName:              task.Name,
+					TaskTargetProjectID:   task.TargetProjectID,
+					TaskTargetProjectPath: task.TargetProjectPath,
+				})
+			}
+		}
+	}
+
+	managedFiles := make([]model.ManagedFileSpec, 0, len(managedByPath))
+	for _, path := range sortedStringKeys(managedByPath) {
+		file := managedByPath[path]
+		file.OwnedPaths = uniqueStringsInOrder(file.OwnedPaths)
+		file.UserManagedPaths = uniqueStringsInOrder(file.UserManagedPaths)
+		file.SourceComponents = uniqueStringsInOrder(file.SourceComponents)
+		managedFiles = append(managedFiles, *file)
+	}
+
+	sort.Slice(publicProviders, func(i, j int) bool {
+		if publicProviders[i].Capability != publicProviders[j].Capability {
+			return publicProviders[i].Capability < publicProviders[j].Capability
+		}
+		if publicProviders[i].ScopeProjectID != publicProviders[j].ScopeProjectID {
+			return publicProviders[i].ScopeProjectID < publicProviders[j].ScopeProjectID
+		}
+		return publicProviders[i].ComponentID < publicProviders[j].ComponentID
+	})
+	sort.Slice(publicFacts, func(i, j int) bool {
+		if publicFacts[i].Name != publicFacts[j].Name {
+			return publicFacts[i].Name < publicFacts[j].Name
+		}
+		if publicFacts[i].ScopeProjectID != publicFacts[j].ScopeProjectID {
+			return publicFacts[i].ScopeProjectID < publicFacts[j].ScopeProjectID
+		}
+		return publicFacts[i].ComponentID < publicFacts[j].ComponentID
+	})
+	sort.Slice(intentBindings, func(i, j int) bool {
+		if intentBindings[i].ComponentID != intentBindings[j].ComponentID {
+			return intentBindings[i].ComponentID < intentBindings[j].ComponentID
+		}
+		if intentBindings[i].Capability != intentBindings[j].Capability {
+			return intentBindings[i].Capability < intentBindings[j].Capability
+		}
+		return intentBindings[i].TargetProjectID < intentBindings[j].TargetProjectID
+	})
+	sort.Slice(synthesisHooks, func(i, j int) bool {
+		if synthesisHooks[i].TargetProjectPath != synthesisHooks[j].TargetProjectPath {
+			return synthesisHooks[i].TargetProjectPath < synthesisHooks[j].TargetProjectPath
+		}
+		if synthesisHooks[i].Phase != synthesisHooks[j].Phase {
+			return synthesisHooks[i].Phase < synthesisHooks[j].Phase
+		}
+		return synthesisHooks[i].ComponentID < synthesisHooks[j].ComponentID
+	})
+	sort.Slice(bootstrapRequirements, func(i, j int) bool {
+		if bootstrapRequirements[i].TargetProjectPath != bootstrapRequirements[j].TargetProjectPath {
+			return bootstrapRequirements[i].TargetProjectPath < bootstrapRequirements[j].TargetProjectPath
+		}
+		if bootstrapRequirements[i].Tool != bootstrapRequirements[j].Tool {
+			return bootstrapRequirements[i].Tool < bootstrapRequirements[j].Tool
+		}
+		return bootstrapRequirements[i].ComponentID < bootstrapRequirements[j].ComponentID
+	})
+	sort.Slice(tasks, func(i, j int) bool {
+		if tasks[i].TargetProjectPath != tasks[j].TargetProjectPath {
+			return tasks[i].TargetProjectPath < tasks[j].TargetProjectPath
+		}
+		if tasks[i].Name != tasks[j].Name {
+			return tasks[i].Name < tasks[j].Name
+		}
+		return tasks[i].ComponentID < tasks[j].ComponentID
+	})
+	sort.Slice(taskSurfaces, func(i, j int) bool {
+		if taskSurfaces[i].TargetProjectPath != taskSurfaces[j].TargetProjectPath {
+			return taskSurfaces[i].TargetProjectPath < taskSurfaces[j].TargetProjectPath
+		}
+		if taskSurfaces[i].Kind != taskSurfaces[j].Kind {
+			return taskSurfaces[i].Kind < taskSurfaces[j].Kind
+		}
+		if taskSurfaces[i].Name != taskSurfaces[j].Name {
+			return taskSurfaces[i].Name < taskSurfaces[j].Name
+		}
+		return taskSurfaces[i].ComponentID < taskSurfaces[j].ComponentID
+	})
+	sort.Slice(triggerBindings, func(i, j int) bool {
+		if triggerBindings[i].Trigger != triggerBindings[j].Trigger {
+			return triggerBindings[i].Trigger < triggerBindings[j].Trigger
+		}
+		if triggerBindings[i].TargetProjectPath != triggerBindings[j].TargetProjectPath {
+			return triggerBindings[i].TargetProjectPath < triggerBindings[j].TargetProjectPath
+		}
+		if triggerBindings[i].TaskTargetProjectPath != triggerBindings[j].TaskTargetProjectPath {
+			return triggerBindings[i].TaskTargetProjectPath < triggerBindings[j].TaskTargetProjectPath
+		}
+		if triggerBindings[i].TaskName != triggerBindings[j].TaskName {
+			return triggerBindings[i].TaskName < triggerBindings[j].TaskName
+		}
+		return triggerBindings[i].ComponentID < triggerBindings[j].ComponentID
+	})
+
+	return model.ResolvedModel{
+		ManagedFiles:            managedFiles,
+		Facts:                   publicFacts,
+		Providers:               publicProviders,
+		SynthesisHooks:          synthesisHooks,
+		BootstrapRequirements:   bootstrapRequirements,
+		Tasks:                   tasks,
+		TaskSurfaces:            taskSurfaces,
+		ResolvedTriggerBindings: triggerBindings,
+		ResolvedIntents:         intentBindings,
+	}, nil
+}
+
+func mergeManagedFileIntent(managedByPath map[string]*model.ManagedFileSpec, componentID string, componentVersion string, file model.StructuredFileSpec) error {
+	for _, ownedPath := range file.OwnedPaths {
+		if _, err := filefmt.RequireStructuredValue(file.DesiredValues, file.Format, ownedPath); err != nil {
+			return fmt.Errorf("file %q: %w", file.Path, err)
+		}
+	}
+
+	current, ok := managedByPath[file.Path]
+	if !ok {
+		current = &model.ManagedFileSpec{
+			Path:              file.Path,
+			Format:            file.Format,
+			OwnedPaths:        append([]string(nil), file.OwnedPaths...),
+			OwnedPathOwners:   map[string]string{},
+			OwnedPathVersions: map[string]string{},
+			UserManagedPaths:  append([]string(nil), file.UserManagedPaths...),
+			DesiredValues:     model.CloneNestedMap(file.DesiredValues),
+			SourceComponents:  []string{componentID},
+		}
+		for _, ownedPath := range file.OwnedPaths {
+			current.OwnedPathOwners[ownedPath] = componentID
+			if componentVersion != "" {
+				current.OwnedPathVersions[ownedPath] = componentVersion
+			}
+		}
+		managedByPath[file.Path] = current
+		return nil
+	}
+
+	if current.Format != file.Format {
+		return fmt.Errorf("file %q is claimed with conflicting formats %q and %q", file.Path, current.Format, file.Format)
+	}
+
+	for _, ownedPath := range file.OwnedPaths {
+		value, err := filefmt.RequireStructuredValue(file.DesiredValues, file.Format, ownedPath)
+		if err != nil {
+			return fmt.Errorf("file %q: %w", file.Path, err)
+		}
+		if existingOwner, ok := current.OwnedPathOwners[ownedPath]; ok && existingOwner != componentID {
+			return fmt.Errorf("file %q has conflicting ownership for %s from components %q and %q", file.Path, ownedPath, existingOwner, componentID)
+		}
+		if existingValue, ok := filefmt.LookupStructuredValue(current.DesiredValues, current.Format, ownedPath); ok {
+			existingFingerprint, err := fingerprintValue(existingValue, true)
+			if err != nil {
+				return fmt.Errorf("file %q compare %s: %w", file.Path, ownedPath, err)
+			}
+			newFingerprint, err := fingerprintValue(value, true)
+			if err != nil {
+				return fmt.Errorf("file %q compare %s: %w", file.Path, ownedPath, err)
+			}
+			if existingFingerprint != newFingerprint {
+				return fmt.Errorf("file %q has conflicting desired values for %s", file.Path, ownedPath)
+			}
+		}
+		filefmt.SetStructuredValue(current.DesiredValues, current.Format, ownedPath, value)
+		current.OwnedPaths = append(current.OwnedPaths, ownedPath)
+		current.OwnedPathOwners[ownedPath] = componentID
+		if componentVersion != "" {
+			if existingVersion, ok := current.OwnedPathVersions[ownedPath]; ok && existingVersion != componentVersion {
+				return fmt.Errorf("file %q has conflicting template versions for %s", file.Path, ownedPath)
+			}
+			current.OwnedPathVersions[ownedPath] = componentVersion
+		}
+	}
+	current.UserManagedPaths = append(current.UserManagedPaths, file.UserManagedPaths...)
+	current.SourceComponents = append(current.SourceComponents, componentID)
+
+	return nil
+}
+
+func resolveCapabilityProvider(desired model.DesiredModel, providers []providerInstance, capability string, projectID string) (providerInstance, error) {
+	scopeChain, err := projectScopeChain(desired, projectID)
+	if err != nil {
+		return providerInstance{}, err
+	}
+
+	for _, scopeProjectID := range scopeChain {
+		matches := []providerInstance{}
+		for _, provider := range providers {
+			if provider.provider.Capability == capability && provider.provider.ScopeProjectID == scopeProjectID {
+				matches = append(matches, provider)
+			}
+		}
+		if len(matches) == 1 {
+			return matches[0], nil
+		}
+		if len(matches) > 1 {
+			return providerInstance{}, fmt.Errorf("capability %q is ambiguous for project %q at scope %q", capability, projectID, scopeProjectID)
+		}
+	}
+
+	globalMatches := []providerInstance{}
+	for _, provider := range providers {
+		if provider.provider.Capability == capability && provider.provider.ScopeProjectID == "" {
+			globalMatches = append(globalMatches, provider)
+		}
+	}
+	if len(globalMatches) == 1 {
+		return globalMatches[0], nil
+	}
+	if len(globalMatches) > 1 {
+		return providerInstance{}, fmt.Errorf("capability %q is ambiguous for project %q at global scope", capability, projectID)
+	}
+
+	return providerInstance{}, fmt.Errorf("no provider for capability %q near project %q", capability, projectID)
+}
+
+func resolveFactProvider(desired model.DesiredModel, facts []factInstance, name string, projectID string) (factInstance, error) {
+	scopeChain, err := projectScopeChain(desired, projectID)
+	if err != nil {
+		return factInstance{}, err
+	}
+
+	for _, scopeProjectID := range scopeChain {
+		matches := []factInstance{}
+		for _, fact := range facts {
+			if fact.fact.Name == name && fact.fact.ScopeProjectID == scopeProjectID {
+				matches = append(matches, fact)
+			}
+		}
+		if len(matches) == 1 {
+			return matches[0], nil
+		}
+		if len(matches) > 1 {
+			return factInstance{}, fmt.Errorf("fact %q is ambiguous for project %q at scope %q", name, projectID, scopeProjectID)
+		}
+	}
+
+	globalMatches := []factInstance{}
+	for _, fact := range facts {
+		if fact.fact.Name == name && fact.fact.ScopeProjectID == "" {
+			globalMatches = append(globalMatches, fact)
+		}
+	}
+	if len(globalMatches) == 1 {
+		return globalMatches[0], nil
+	}
+	if len(globalMatches) > 1 {
+		return factInstance{}, fmt.Errorf("fact %q is ambiguous for project %q at global scope", name, projectID)
+	}
+
+	return factInstance{}, fmt.Errorf("no fact %q near project %q", name, projectID)
+}
+
+func resolveFactRefs(desired model.DesiredModel, facts []factInstance, values map[string]any, defaultProjectID string) (map[string]any, error) {
+	resolved, err := resolveFactRefsValue(desired, facts, values, defaultProjectID)
+	if err != nil {
+		return nil, err
+	}
+	root, ok := resolved.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("structured values must resolve to an object")
+	}
+	return root, nil
+}
+
+func resolveFactRefsValue(desired model.DesiredModel, facts []factInstance, value any, defaultProjectID string) (any, error) {
+	switch typed := value.(type) {
+	case model.FactValueRef:
+		projectID := typed.TargetProjectID
+		if projectID == "" {
+			projectID = defaultProjectID
+		}
+		if projectID == "" {
+			return nil, fmt.Errorf("fact reference %q has no target project", typed.Name)
+		}
+		fact, err := resolveFactProvider(desired, facts, typed.Name, projectID)
+		if err != nil {
+			return nil, err
+		}
+		resolved, ok := filefmt.LookupStructuredValue(fact.fact.Values, model.FileFormatTOML, typed.Path)
+		if !ok {
+			return nil, fmt.Errorf("fact %q on component %q does not provide path %q", typed.Name, fact.componentID, typed.Path)
+		}
+		return model.CloneStructuredValue(resolved), nil
+	case map[string]any:
+		resolved := make(map[string]any, len(typed))
+		for key, nested := range typed {
+			value, err := resolveFactRefsValue(desired, facts, nested, defaultProjectID)
+			if err != nil {
+				return nil, err
+			}
+			resolved[key] = value
+		}
+		return resolved, nil
+	case []any:
+		resolved := make([]any, 0, len(typed))
+		for _, nested := range typed {
+			value, err := resolveFactRefsValue(desired, facts, nested, defaultProjectID)
+			if err != nil {
+				return nil, err
+			}
+			resolved = append(resolved, value)
+		}
+		return resolved, nil
+	default:
+		return value, nil
+	}
+}
+
+func projectScopeChain(desired model.DesiredModel, projectID string) ([]string, error) {
+	project, err := requireProject(desired, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	chain := []string{}
+	seen := map[string]struct{}{}
+	current := project
+	for current != nil {
+		if _, ok := seen[current.ID]; ok {
+			return nil, fmt.Errorf("project parent cycle detected at %q", current.ID)
+		}
+		seen[current.ID] = struct{}{}
+		chain = append(chain, current.ID)
+		if current.ParentID == "" {
+			break
+		}
+		parentID := current.ParentID
+		current = desired.ProjectByID(parentID)
+		if current == nil {
+			return nil, fmt.Errorf("project parent %q is not declared", parentID)
+		}
+	}
+	return chain, nil
+}
+
+func applyWorkspaceMembersIntent(managedByPath map[string]*model.ManagedFileSpec, componentID string, provider providerInstance, intent model.RoutedIntentSpec) error {
+	filePath := provider.provider.Attributes[model.ProviderAttrFilePath]
+	ownedPath := provider.provider.Attributes[model.ProviderAttrOwnedPath]
+	if filePath == "" || ownedPath == "" {
+		return fmt.Errorf("workspace manager provider on component %q is missing file_path or owned_path", provider.componentID)
+	}
+
+	current, ok := managedByPath[filePath]
+	if !ok {
+		current = &model.ManagedFileSpec{
+			Path:             filePath,
+			Format:           model.FileFormatTOML,
+			DesiredValues:    map[string]any{},
+			SourceComponents: []string{},
+		}
+		managedByPath[filePath] = current
+	}
+
+	memberPaths := append([]string(nil), intent.Lists[model.IntentListMemberPaths]...)
+	if existingValue, ok := filefmt.LookupStructuredValue(current.DesiredValues, model.FileFormatTOML, ownedPath); ok {
+		existingFingerprint, err := fingerprintValue(existingValue, true)
+		if err != nil {
+			return fmt.Errorf("file %q compare %s: %w", filePath, ownedPath, err)
+		}
+		memberFingerprint, err := fingerprintValue(memberPaths, true)
+		if err != nil {
+			return fmt.Errorf("file %q compare %s: %w", filePath, ownedPath, err)
+		}
+		if existingFingerprint != memberFingerprint {
+			return fmt.Errorf("file %q has conflicting desired values for %s", filePath, ownedPath)
+		}
+	}
+
+	filefmt.SetStructuredValue(current.DesiredValues, model.FileFormatTOML, ownedPath, memberPaths)
+	current.OwnedPaths = append(current.OwnedPaths, ownedPath)
+	current.SourceComponents = append(current.SourceComponents, componentID, provider.componentID)
+	if current.Format == "" {
+		current.Format = model.FileFormatTOML
+	}
+
+	return nil
+}
+
+func validatePythonDependencyIntent(provider providerInstance, intent model.RoutedIntentSpec) error {
+	requirement := intent.Attributes[model.IntentAttrRequirement]
+	if requirement == "" {
+		return fmt.Errorf("python package manager request is missing requirement")
+	}
+
+	dependencyPath := provider.provider.Attributes[model.ProviderAttrDependencyPath]
+	if dependencyPath == "" {
+		return fmt.Errorf("python package manager provider on component %q is missing dependency_path", provider.componentID)
+	}
+
+	artifactKinds := provider.provider.Lists[model.ProviderListArtifactKinds]
+	if len(artifactKinds) == 0 {
+		return fmt.Errorf("python package manager provider on component %q is missing artifact kinds", provider.componentID)
+	}
+
+	if !stringSliceContains(artifactKinds, model.ArtifactKindPyPI) {
+		return fmt.Errorf("python package manager provider on component %q does not accept %q artifacts", provider.componentID, model.ArtifactKindPyPI)
+	}
+
+	return nil
+}
+
+func resolveTriggerTasks(desired model.DesiredModel, tasks []model.ResolvedTask, binding model.TriggerBindingSpec) ([]model.ResolvedTask, error) {
+	if len(binding.MatchNames) == 0 && len(binding.MatchTags) == 0 {
+		return nil, fmt.Errorf("must specify match_names or match_tags")
+	}
+
+	matches := []model.ResolvedTask{}
+	for _, task := range tasks {
+		withinScope, err := projectWithinSubtree(desired, task.TargetProjectID, binding.TargetProjectID)
+		if err != nil {
+			return nil, err
+		}
+		if !withinScope {
+			continue
+		}
+		if !taskMatches(binding, task) {
+			continue
+		}
+		matches = append(matches, task)
+	}
+
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("no tasks matched trigger %q in project subtree %q", binding.Trigger, binding.TargetProjectID)
+	}
+
+	return matches, nil
+}
+
+func taskMatches(binding model.TriggerBindingSpec, task model.ResolvedTask) bool {
+	if len(binding.MatchNames) > 0 && !stringSliceContains(binding.MatchNames, task.Name) {
+		return false
+	}
+	if len(binding.MatchTags) > 0 && !stringSliceContainsAll(task.Tags, binding.MatchTags) {
+		return false
+	}
+	return true
+}
+
+func projectWithinSubtree(desired model.DesiredModel, candidateProjectID string, ancestorProjectID string) (bool, error) {
+	current, err := requireProject(desired, candidateProjectID)
+	if err != nil {
+		return false, err
+	}
+
+	for current != nil {
+		if current.ID == ancestorProjectID {
+			return true, nil
+		}
+		if current.ParentID == "" {
+			return false, nil
+		}
+		parentID := current.ParentID
+		current = desired.ProjectByID(parentID)
+		if current == nil {
+			return false, fmt.Errorf("project parent %q is not declared", parentID)
+		}
+	}
+
+	return false, nil
+}
+
+func requireProject(desired model.DesiredModel, projectID string) (*model.ProjectSpec, error) {
+	project := desired.ProjectByID(projectID)
+	if project == nil {
+		return nil, fmt.Errorf("project %q is not declared", projectID)
+	}
+	return project, nil
+}
+
+func sortedStringKeys[T any](values map[string]T) []string {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func uniqueStringsInOrder(values []string) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		out = append(out, value)
+	}
+	return out
+}
+
+func stringSliceContains(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
+}
+
+func stringSliceContainsAll(values []string, targets []string) bool {
+	for _, target := range targets {
+		if !stringSliceContains(values, target) {
+			return false
+		}
+	}
+	return true
+}

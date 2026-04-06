@@ -3,7 +3,7 @@ package command
 import (
 	"flag"
 
-	"github.com/ophidiarium/moltark/internal/moltark"
+	"github.com/ophidiarium/moltark/internal/engine"
 )
 
 type ApplyCommand struct {
@@ -26,7 +26,7 @@ func (c *ApplyCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.printLine(moltark.RenderPlan(plan))
+	c.printLine(engine.RenderPlan(plan))
 	if plan.HasConflicts() {
 		c.errorf("Apply aborted due to conflicts.\n")
 		return 1
@@ -53,7 +53,7 @@ func (c *ApplyCommand) Run(args []string) int {
 	}
 
 	c.printLine("")
-	c.printLine(moltark.RenderApply(result))
+	c.printLine(engine.RenderApply(result))
 	return 0
 }
 

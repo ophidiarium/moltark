@@ -4,7 +4,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/ophidiarium/moltark/internal/moltark"
+	"github.com/ophidiarium/moltark/internal/engine"
+	"github.com/ophidiarium/moltark/internal/model"
 )
 
 type PlanCommand struct {
@@ -26,7 +27,7 @@ func (c *PlanCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.printLine(moltark.RenderPlan(plan))
+	c.printLine(engine.RenderPlan(plan))
 
 	if plan.HasConflicts() {
 		return 1
@@ -47,9 +48,9 @@ func (c *PlanCommand) Help() string {
 
 Options:
 
-  -detailed-exitcode    Return 2 when changes are planned.`, moltark.ProjectSpecFileName)
+  -detailed-exitcode    Return 2 when changes are planned.`, model.ProjectSpecFileName)
 }
 
 func (c *PlanCommand) Synopsis() string {
-	return fmt.Sprintf("Show repository changes required by %s", moltark.ProjectSpecFileName)
+	return fmt.Sprintf("Show repository changes required by %s", model.ProjectSpecFileName)
 }

@@ -7,7 +7,7 @@ go_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "//internal/cliapp",
-        "//internal/moltark",
+        "//internal/model",
         "//internal/testrepo",
     ],
 )

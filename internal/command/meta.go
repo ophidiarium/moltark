@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/ophidiarium/moltark/internal/moltark"
+	"github.com/ophidiarium/moltark/internal/engine"
 )
 
 type Meta struct {
@@ -16,8 +16,8 @@ type Meta struct {
 	Stderr     io.Writer
 }
 
-func (m Meta) service() moltark.Service {
-	return moltark.NewService()
+func (m Meta) service() engine.Service {
+	return engine.NewService()
 }
 
 func (m Meta) printf(format string, args ...any) {

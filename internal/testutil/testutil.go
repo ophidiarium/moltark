@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/ophidiarium/moltark/internal/cliapp"
-	"github.com/ophidiarium/moltark/internal/moltark"
+	"github.com/ophidiarium/moltark/internal/model"
 	"github.com/ophidiarium/moltark/internal/testrepo"
 )
 
@@ -99,7 +99,7 @@ func RenderRepoState(t *testing.T, root string) string {
 	t.Helper()
 
 	paths := []string{
-		moltark.ProjectSpecFileName,
+		model.ProjectSpecFileName,
 		".gitattributes",
 		".moltark/state.json",
 	}
