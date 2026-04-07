@@ -1,3 +1,5 @@
+"""A Python project with drifted owned field values."""
+
 python = use("moltark/python")
 
 python.python_project(

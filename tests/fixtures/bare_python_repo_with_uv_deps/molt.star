@@ -1,3 +1,5 @@
+"""A bare Python project with uv dependency management."""
+
 python = use("moltark/python")
 
 python.python_project(

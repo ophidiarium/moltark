@@ -1,3 +1,5 @@
+"""A workspace managing structured JSON, TOML, and YAML files."""
+
 core = use("moltark/core")
 
 repo = core.project(

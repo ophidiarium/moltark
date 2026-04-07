@@ -1,3 +1,5 @@
+"""A Go project with linting, VS Code integration, and fact-driven config."""
+
 core = use("moltark/core")
 
 app = core.project(

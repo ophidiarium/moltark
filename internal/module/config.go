@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/ophidiarium/moltark/internal/filefmt"
@@ -66,8 +67,17 @@ func InitRepository(root string) (string, error) {
 		}
 	}
 
+	escapedName := strings.TrimSuffix(strings.TrimPrefix(strconv.Quote(name), "\""), "\"")
 	content := fmt.Sprintf(
-		"python = use(%q)\n\nroot = python.python_project(\n    name = %q,\n    path = \".\",\n    version = %q,\n    requires_python = %q,\n)\n",
+		"\"\"\"Moltark configuration for %s.\"\"\"\n\n"+
+			"python = use(%q)\n\n"+
+			"root = python.python_project(\n"+
+			"    name = %q,\n"+
+			"    path = \".\",\n"+
+			"    version = %q,\n"+
+			"    requires_python = %q,\n"+
+			")\n",
+		escapedName,
 		model.ModuleSourcePython,
 		name,
 		version,
